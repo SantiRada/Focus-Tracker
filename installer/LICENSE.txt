@@ -1,0 +1,8 @@
+Focus Tracker v1.4
+Copyright (c) 2025 Tenzinn (Santiago Rada)
+
+Este software es de uso personal y libre redistribucion.
+Los datos de tracking se almacenan localmente en tu computadora
+y nunca se envian a ningun servidor externo.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.

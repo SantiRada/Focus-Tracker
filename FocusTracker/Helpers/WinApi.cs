@@ -1,0 +1,55 @@
+using System.Runtime.InteropServices;
+using System.Text;
+
+namespace FocusTracker.Helpers;
+
+public static class WinApi
+{
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+
+    [DllImport("user32.dll")]
+    public static extern bool IsWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    public static extern bool IsWindowVisible(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+    public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+    // DWM dark mode title bar (Windows 10 20H1+ / Windows 11)
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE_OLD = 19;
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
+    public static void EnableDarkTitleBar(IntPtr hwnd)
+    {
+        try
+        {
+            int value = 1;
+            DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_OLD, ref value, sizeof(int));
+            DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref value, sizeof(int));
+        }
+        catch { /* older Windows — silently ignore */ }
+    }
+
+    public static (IntPtr hwnd, uint processId, string windowTitle) GetForegroundProcessInfo()
+    {
+        var hwnd = GetForegroundWindow();
+        if (hwnd == IntPtr.Zero) return (IntPtr.Zero, 0, "");
+        GetWindowThreadProcessId(hwnd, out uint pid);
+        var sb = new StringBuilder(256);
+        GetWindowText(hwnd, sb, 256);
+        return (hwnd, pid, sb.ToString());
+    }
+}

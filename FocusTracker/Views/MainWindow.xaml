@@ -1,0 +1,2232 @@
+<Window x:Class="FocusTracker.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Focus Tracker" Height="700" Width="1050" MinHeight="600" MinWidth="860"
+        WindowStyle="SingleBorderWindow" Background="{StaticResource BgDarkBrush}">
+    <!-- Root grid hosts normal UI + lite mode overlay + onboarding overlay -->
+    <Grid x:Name="RootGrid">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition x:Name="ColSidebar" Width="220"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ══ SIDEBAR ═══════════════════════════════════════════════ -->
+        <Border x:Name="Sidebar" Grid.Column="0" Background="#0E0E12"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0" Width="220">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Logo Area + Collapse -->
+                <Grid Margin="18,22,18,22">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="TxtLogo" Text="Focus Tracker" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Click="BtnCollapseSidebar_Click" Style="{StaticResource GhostButton}" Padding="8,6" VerticalAlignment="Center" ToolTip="Colapsar menú">
+                        <TextBlock Text="&#xE700;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource TextMutedBrush}"/>
+                    </Button>
+                </Grid>
+
+                <!-- Active Session Status -->
+                <Border x:Name="SidebarStatusArea" Grid.Row="1" Background="#0F0F13" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1" Padding="18,12" Margin="0,0,0,10">
+                    <Grid x:Name="GridStatus" HorizontalAlignment="Stretch">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition x:Name="ColStatusDot" Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Ellipse x:Name="StatusDot" Width="10" Height="10" Fill="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,12,0" HorizontalAlignment="Left"/>
+                        <StackPanel Grid.Column="1" x:Name="SidebarStatusText">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="TxtStatusLabel" Text="INACTIVO" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" x:Name="TxtSessionTime" Text="—" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
+                            </Grid>
+                            <TextBlock x:Name="TxtCurrentApp" Text="—" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Nav -->
+                <StackPanel Grid.Row="2" Margin="10,0,10,0" VerticalAlignment="Top">
+                    <Button x:Name="BtnNavSetup" Style="{StaticResource SidebarButtonStyle}" Click="NavSetup_Click" ToolTip="Inicio">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xEA8A;" Style="{StaticResource SidebarIconStyle}"/>
+                            <TextBlock x:Name="TxtNavInicio" Text="Inicio" Style="{StaticResource SidebarTextStyle}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="BtnNavDashboard" Style="{StaticResource SidebarButtonStyle}" Click="NavDashboard_Click" ToolTip="Dashboard">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xF246;" Style="{StaticResource SidebarIconStyle}"/>
+                            <TextBlock x:Name="TxtNavDash" Text="Dashboard" Style="{StaticResource SidebarTextStyle}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="BtnNavProjects" Style="{StaticResource SidebarButtonStyle}" Click="NavProjects_Click" ToolTip="Proyectos">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8B7;" Style="{StaticResource SidebarIconStyle}"/>
+                            <TextBlock x:Name="TxtNavProjects" Text="Proyectos" Style="{StaticResource SidebarTextStyle}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Border x:Name="NavDivider1" Height="1" Background="{StaticResource BorderBrush}" Margin="8,10,8,10"/>
+
+                    <Button x:Name="BtnNavHelp" Style="{StaticResource SidebarButtonStyle}" Click="NavHelp_Click" ToolTip="Ayuda">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE897;" Style="{StaticResource SidebarIconStyle}"/>
+                            <TextBlock x:Name="TxtNavHelp" Text="Ayuda" Style="{StaticResource SidebarTextStyle}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="BtnOnboarding" Style="{StaticResource SidebarButtonStyle}" Click="ShowOnboarding_Click" ToolTip="Tutorial inicial">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE946;" Style="{StaticResource SidebarIconStyle}"/>
+                            <TextBlock x:Name="TxtNavTut" Text="Tutorial" Style="{StaticResource SidebarTextStyle}"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Footer area / Stop button -->
+                <StackPanel Grid.Row="3" Margin="10,0,10,20" VerticalAlignment="Bottom">
+                    <TextBlock x:Name="TxtAppVersion" FontSize="9" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                    <Button x:Name="BtnSidebarStop" Click="BtnStop_Click" IsEnabled="False" Style="{StaticResource SidebarButtonStyle}" ToolTip="Detener tracking">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE71A;" Style="{StaticResource SidebarIconStyle}" Foreground="{StaticResource DangerBrush}"/>
+                            <TextBlock x:Name="TxtStopLabel" Text="Detener tracking" Style="{StaticResource SidebarTextStyle}" Foreground="{StaticResource DangerBrush}"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ══ PAGES ════════════════════════════════════════════════ -->
+        <Grid x:Name="PagesGrid" Grid.Column="1">
+
+            <!-- ── HOME (Replaces Setup) ─────────────────────────────── -->
+            <ScrollViewer x:Name="PageSetup" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="32,28,32,28">
+                    <!-- Home Header -->
+                    <Grid x:Name="HomeBaseHeader" Margin="0,0,0,24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Inicio"
+                                       FontFamily="{StaticResource FontTitle}"
+                                       FontSize="28" FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="Tus proyectos recientes y actividad."
+                                       FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <Button x:Name="BtnEnterLite" Grid.Column="1" Click="EnterLiteMode_Click" Style="{StaticResource OutlineButton}" Padding="16,10" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE7E8;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Modo Lite" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <!-- Home Base Content (Recent Projects) -->
+                    <StackPanel x:Name="HomeBaseContent">
+                        <TextBlock Text="PROYECTOS RECIENTES" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,16"/>
+                        <ItemsControl x:Name="RecentProjectsList">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="3" Margin="-8,0"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20" Margin="8,0,8,16" Cursor="Hand" Tag="{Binding OriginalProject}" MouseLeftButtonUp="ProjectCard_Click">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" FontFamily="{StaticResource FontTitle}" Margin="0,0,0,20" TextTrimming="CharacterEllipsis"/>
+                                            <Button Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Padding="0,10" Tag="{Binding OriginalProject}" Click="BtnStartRecentProject_Click">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xF5B0;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Comenzar" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <Grid x:Name="HomeNoProjects" Visibility="Collapsed" Margin="0,10,0,20">
+                        <Rectangle Stroke="#44444F" StrokeDashArray="4 4" StrokeThickness="1.5" RadiusX="12" RadiusY="12" Fill="Transparent" Opacity="0.5"/>
+                        <Button Content="+ Crear nuevo Proyecto" Style="{StaticResource GhostButton}" 
+                                Height="70" FontSize="15" FontWeight="SemiBold" Click="NewProject_Click"
+                                Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Stretch" VerticalContentAlignment="Center"/>
+                    </Grid>
+
+                    <!-- LIVE DASHBOARD (When tracking) -->
+                    <StackPanel x:Name="HomeLiveDashboard" Visibility="Collapsed">
+                        <Grid Margin="0,0,0,24">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock x:Name="TxtLiveProjName" Text="Tracking activo" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" FontFamily="{StaticResource FontTitle}"/>
+                                <TextBlock x:Name="TxtLiveCurrentAppName" Text="Esperando actividad..." FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" Visibility="Collapsed"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <!-- Alarms Indicators -->
+                                    <StackPanel x:Name="LiveAlarmSession" Orientation="Horizontal" Margin="16,0,0,0" Visibility="Collapsed">
+                                        <TextBlock Text="&#xE823;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock x:Name="TxtLiveAlarmSession" Text="0m" FontSize="12" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel x:Name="LiveAlarmTotal" Orientation="Horizontal" Margin="12,0,0,0" Visibility="Collapsed">
+                                        <TextBlock Text="&#xEC92;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock x:Name="TxtLiveAlarmTotal" Text="0m" FontSize="12" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="■  Finalizar sesión" Style="{StaticResource DangerButton}" Padding="20,10" Click="BtnStop_Click"/>
+                        </Grid>
+
+                        <UniformGrid Columns="2" Margin="0,0,0,24">
+                            <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,0,12,0">
+                                <StackPanel><TextBlock Text="TRACKING" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
+                                <TextBlock x:Name="TxtLiveFocus" Text="Esperando..." FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" FontFamily="{StaticResource FontTitle}" TextTrimming="CharacterEllipsis"/></StackPanel>
+                            </Border>
+                            <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
+                                <StackPanel><TextBlock Text="TOTAL" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,4"/>
+                                <TextBlock x:Name="TxtLiveTotal" Text="0m" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" FontFamily="{StaticResource FontTitle}"/></StackPanel>
+                            </Border>
+                        </UniformGrid>
+
+                        <TextBlock Text="ACTIVIDAD EN TIEMPO REAL" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,16"/>
+                        <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="1">
+                            <ItemsControl x:Name="HomeLiveList" Padding="10">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,4">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="80"/><ColumnDefinition Width="80"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Name}" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding FocusDisplay}" FontSize="12" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding UnfocusDisplay}" FontSize="12" Foreground="#FFAA44" HorizontalAlignment="Center"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding TotalDisplay}" FontSize="12" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Right"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- SESSION SUMMARY (After stopping) -->
+                    <StackPanel x:Name="HomeSessionSummary" Visibility="Collapsed">
+                        <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="16" Padding="32">
+                            <StackPanel>
+                                <TextBlock Text="RESUMEN DE SESIÓN" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                <TextBlock x:Name="TxtSummaryTitle" Text="Buen trabajo" FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" FontFamily="{StaticResource FontTitle}" HorizontalAlignment="Center"/>
+                                <TextBlock x:Name="TxtSummaryTime" Text="Duración: 1h 20m" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,8,0,32"/>
+                                
+                                <Border Padding="0,0,0,8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="2*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Aplicación / URL" Grid.Column="0" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                        <TextBlock Text="Focus"            Grid.Column="1" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Unfocus"          Grid.Column="2" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Total"            Grid.Column="3" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Right"/>
+                                    </Grid>
+                                </Border>
+                                <ItemsControl x:Name="SummaryTopApps">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                                    <Ellipse Width="8" Height="8" Fill="{StaticResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                    <TextBlock Text="{Binding Name}" FontSize="14" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding FocusDisplay}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding UnfocusDisplay}" FontSize="14" FontWeight="Bold" Foreground="#FFAA44" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding DurationDisplay}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Button Content="Volver al inicio" Style="{StaticResource PrimaryButton}" Margin="0,32,0,0" Padding="32,12" HorizontalAlignment="Center" Click="BtnSummaryBack_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ── DASHBOARD ──────────────────────────────────────── -->
+            <Grid x:Name="PageDashboard" Visibility="Collapsed">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="32,28,32,28">
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Dashboard" FontFamily="{StaticResource FontTitle}"
+                                   FontSize="24" FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                        <Button Grid.Column="1" Content="≡  Sesiones"
+                                Style="{StaticResource OutlineButton}"
+                                Click="NavSessions_Click"
+                                Padding="14,8" VerticalAlignment="Center"/>
+                    </Grid>
+                    <TextBlock Text="Analizá tus patrones de foco a lo largo del tiempo."
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,20"/>
+
+                    <!-- Time tabs -->
+                    <Border Background="{StaticResource BgCardBrush}"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="8"
+                            Padding="5" Margin="0,0,0,14" HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal">
+                            <ToggleButton x:Name="TabToday"  Content="Hoy"          Style="{StaticResource TabButton}" IsChecked="True" Click="TimeTab_Click" Tag="Today"  Margin="0,0,2,0"/>
+                            <ToggleButton x:Name="TabWeek"   Content="Esta semana"  Style="{StaticResource TabButton}" Click="TimeTab_Click" Tag="Week"   Margin="0,0,2,0"/>
+                            <ToggleButton x:Name="TabMonth"  Content="Este mes"     Style="{StaticResource TabButton}" Click="TimeTab_Click" Tag="Month"  Margin="0,0,2,0"/>
+                            <ToggleButton x:Name="TabYear"   Content="Este año"     Style="{StaticResource TabButton}" Click="TimeTab_Click" Tag="Year"   Margin="0,0,2,0"/>
+                            <ToggleButton x:Name="TabCustom" Content="Personalizado" Style="{StaticResource TabButton}" Click="TimeTab_Click" Tag="Custom"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel x:Name="CustomDatePanel" Orientation="Horizontal" Margin="0,0,0,14" Visibility="Collapsed">
+                        <DatePicker x:Name="DateFrom" Width="160" Margin="0,0,10,0" SelectedDateChanged="DateRange_Changed"/>
+                        <TextBlock Text="→" VerticalAlignment="Center" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,10,0"/>
+                        <DatePicker x:Name="DateTo"   Width="160" SelectedDateChanged="DateRange_Changed"/>
+                    </StackPanel>
+
+                    <!-- Top 3 -->
+                    <ItemsControl x:Name="SummaryCards" Margin="0,0,0,20">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="3" Margin="0,0,0,0"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{StaticResource BgCardBrush}"
+                                        BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8"
+                                        Padding="16,14" Margin="0,0,10,0">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding AppDisplayName}" FontSize="12" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding ProcessName}" FontSize="10" FontFamily="Consolas"
+                                                   Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,10"/>
+                                        <TextBlock Text="{Binding FormattedTotal}"
+                                                   FontFamily="{StaticResource FontTitle}"
+                                                   FontSize="22" FontWeight="Bold"
+                                                   Foreground="{StaticResource AccentBrush}"/>
+                                        <TextBlock FontSize="11" Foreground="{StaticResource TextMutedBrush}"
+                                                   Margin="0,3,0,0"
+                                                   Text="{Binding EventCount, StringFormat='{}{0} sesiones'}"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Desglose -->
+                    <Border Background="{StaticResource BgCardBrush}" CornerRadius="8"
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                        <StackPanel>
+                            <Border Padding="14,10" Background="{StaticResource BgDarkBrush}"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                                    CornerRadius="8,8,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="200"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Desglose completo" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                    <TextBox Grid.Column="1" x:Name="TxtDashSearch"
+                                             Style="{StaticResource SearchBox}"
+                                             Tag="Buscar app…"
+                                             TextChanged="TxtDashSearch_TextChanged"
+                                             Height="32" Padding="10,0"/>
+                                </Grid>
+                            </Border>
+                            <!-- Table header -->
+                            <Border Padding="14,8" Background="#0F0F13"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="50"/>
+                                        <ColumnDefinition Width="36"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Aplicación / URL" Grid.Column="0" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Focus"            Grid.Column="1" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Unfocus"          Grid.Column="2" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Total"            Grid.Column="3" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Tipo"             Grid.Column="4" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                </Grid>
+                            </Border>
+                            <ItemsControl x:Name="DetailTable" Padding="6,4,6,6">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="5" Padding="8,9" Margin="0,1">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource BgCardHoverBrush}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="50"/>
+                                                    <ColumnDefinition Width="36"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                                    <Ellipse Width="6" Height="6" Fill="{StaticResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="{Binding AppDisplayName}" FontSize="13"
+                                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <!-- Focus time -->
+                                                <TextBlock Grid.Column="1" Text="{Binding FormattedFocus}"
+                                                           FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
+                                                <!-- Unfocus time (dimmed if none) -->
+                                                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding FormattedUnfocus}" FontSize="12"
+                                                               Foreground="#FFAA44" FontWeight="SemiBold">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding HasUnfocus}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                    <TextBlock Text="—" FontSize="12"
+                                                               Foreground="{StaticResource TextMutedBrush}">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding HasUnfocus}" Value="False">
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                                <!-- Total -->
+                                                <TextBlock Grid.Column="3" Text="{Binding FormattedTotal}"
+                                                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
+                                                           VerticalAlignment="Center"/>
+                                                <!-- Type badge -->
+                                                <Border Grid.Column="4" Background="{Binding BadgeBackground}" BorderBrush="{Binding BadgeBorder}"
+                                                        BorderThickness="1" CornerRadius="4" Padding="5,2" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding BadgeLabel}" FontSize="9" FontWeight="Bold" Foreground="{Binding BadgeForeground}"/>
+                                                </Border>
+                                                <!-- Delete button -->
+                                                <Button Grid.Column="5" Content="✕"
+                                                        Tag="{Binding ProcessName}" Click="DeleteAppData_Click"
+                                                        VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                        FontSize="11" Padding="4,2" ToolTip="Eliminar datos">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                            <Setter Property="BorderThickness" Value="0"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+                                                            <Setter Property="Cursor" Value="Hand"/>
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="Button">
+                                                                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4" Padding="4,2">
+                                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                        </Border>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                                <Setter TargetName="bd" Property="Background" Value="#2A0008"/>
+                                                                                <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock x:Name="TxtNoDashData" Text="Sin datos para el período seleccionado."
+                                       Padding="14,12" Foreground="{StaticResource TextMutedBrush}"
+                                       FontSize="13" Visibility="Collapsed"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ── SESSIONS ───────────────────────────────────────── -->
+            </Grid>
+
+
+            <ScrollViewer x:Name="PageSessions" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
+                <StackPanel Margin="32,28,32,28">
+                    <!-- Sessions Header -->
+                    <Grid Margin="0,0,0,24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Click="NavDashboard_Click" Style="{StaticResource GhostButton}" Padding="8" Margin="0,0,12,0" VerticalAlignment="Center" ToolTip="Volver al Dashboard">
+                            <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource AccentBrush}"/>
+                        </Button>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Sesiones" FontFamily="{StaticResource FontTitle}"
+                                       FontSize="28" FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="Historial detallado de tu actividad."
+                                       FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Filters -->
+                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16,12" Margin="0,0,0,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="180"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="TxtSessionFilterProject" Style="{StaticResource SearchBox}" Tag="Filtrar por proyecto…" TextChanged="SessionFilter_Changed" Height="36"/>
+                            <DatePicker x:Name="DateSessionFilter" Grid.Column="2" SelectedDateChanged="SessionFilter_Changed"/>
+                            <Button Grid.Column="4" Content="Limpiar" Style="{StaticResource OutlineButton}" Click="BtnClearSessionFilters_Click" Padding="16,0" Height="36"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Background="{StaticResource BgCardBrush}" CornerRadius="8"
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                        <StackPanel>
+                            <!-- Header -->
+                            <Border Padding="14,10" Background="{StaticResource BgDarkBrush}"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" CornerRadius="8,8,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="36"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Nombre / Proyecto" Grid.Column="0" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Duración"         Grid.Column="1" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Hora"             Grid.Column="2" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Estado"           Grid.Column="3" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                </Grid>
+                            </Border>
+
+                            <ItemsControl x:Name="SessionList" Padding="6,4,6,6">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <!-- Date Divider -->
+                                            <Border x:Name="DividerPanel" Visibility="Collapsed" Padding="14,20,14,10" Margin="0,0,0,5">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding DateDisplay}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                                    <Border Grid.Column="1" Height="1" Background="{StaticResource BorderBrush}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- Session Row -->
+                                            <Border x:Name="SessionRow" CornerRadius="5" Padding="8,10" Margin="0,1"
+                                                    Cursor="Hand" Tag="{Binding}" MouseLeftButtonUp="SessionRow_Click">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="Transparent"/>
+                                                        <Style.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter Property="Background" Value="{StaticResource BgCardHoverBrush}"/>
+                                                            </Trigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="120"/>
+                                                        <ColumnDefinition Width="90"/>
+                                                        <ColumnDefinition Width="90"/>
+                                                        <ColumnDefinition Width="36"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding DisplayName}"
+                                                               FontSize="13" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding DurationDisplay}"
+                                                               FontSize="12" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding StartTime, StringFormat='HH:mm'}"
+                                                               FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="3" Text="{Binding StatusDisplay}"
+                                                               FontSize="11" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                                    <Button Grid.Column="4" Content="✕" Tag="{Binding Id}"
+                                                            Click="DeleteSession_Click"
+                                                            VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                            FontSize="11" Padding="4,2" ToolTip="Eliminar sesión">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Setter Property="Background" Value="Transparent"/>
+                                                                <Setter Property="BorderThickness" Value="0"/>
+                                                                <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+                                                                <Setter Property="Cursor" Value="Hand"/>
+                                                                <Setter Property="Template">
+                                                                    <Setter.Value>
+                                                                        <ControlTemplate TargetType="Button">
+                                                                            <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="4" Padding="4,2">
+                                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                            </Border>
+                                                                            <ControlTemplate.Triggers>
+                                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                                    <Setter TargetName="bd" Property="Background" Value="#2A0008"/>
+                                                                                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                                                                                </Trigger>
+                                                                            </ControlTemplate.Triggers>
+                                                                        </ControlTemplate>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                </Grid>
+                                            </Border>
+                                        </Grid>
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding IsDivider}" Value="True">
+                                                <Setter TargetName="DividerPanel" Property="Visibility" Value="Visible"/>
+                                                <Setter TargetName="SessionRow" Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock x:Name="TxtNoSessions" Text="Todavía no hay sesiones registradas."
+                                       Padding="14,12" Foreground="{StaticResource TextMutedBrush}"
+                                       FontSize="13" Visibility="Collapsed"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Pagination -->
+                    <StackPanel x:Name="PaginationPanel" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+                        <Button x:Name="BtnPrevPage" Click="BtnPrevPage_Click" Style="{StaticResource GhostButton}" Padding="12,8">
+                            <TextBlock Text="&#xE76B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"/>
+                        </Button>
+                        <TextBlock x:Name="TxtPageInfo" Text="Página 1 de 1" VerticalAlignment="Center" Margin="16,0" Foreground="{StaticResource TextSecondaryBrush}" FontSize="13"/>
+                        <Button x:Name="BtnNextPage" Click="BtnNextPage_Click" Style="{StaticResource GhostButton}" Padding="12,8">
+                            <TextBlock Text="&#xE76C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"/>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ── SESSION DETAIL ─────────────────────────────────── -->
+            <ScrollViewer x:Name="PageSessionDetail" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"
+                          ClipToBounds="False">
+                <StackPanel Margin="32,28,32,28">
+                    <Button Click="BackToSessions_Click" Style="{StaticResource GhostButton}" Padding="8" Margin="0,0,0,20" HorizontalAlignment="Left" ToolTip="Volver a sesiones">
+                        <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource AccentBrush}"/>
+                    </Button>
+
+                    <TextBlock x:Name="TxtDetailTitle"
+                               FontFamily="{StaticResource FontTitle}"
+                               FontSize="24" FontWeight="Bold"
+                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                    <TextBlock x:Name="TxtDetailSubtitle"
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16"/>
+
+                    <!-- Editable name + project -->
+                    <Border Background="{StaticResource BgCardBrush}"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,20">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="NOMBRE DE SESIÓN" FontSize="9" FontWeight="Bold"
+                                           Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,6"/>
+                                <TextBox x:Name="TxtDetailName" Style="{StaticResource SearchBox}"
+                                         Tag="Sin nombre" Height="38" Padding="10,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="PROYECTO" FontSize="9" FontWeight="Bold"
+                                           Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,6"/>
+                                <ComboBox x:Name="CmbDetailProject" Height="38"
+                                          MaxDropDownHeight="200"
+                                          VirtualizingStackPanel.IsVirtualizing="False"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="4" VerticalAlignment="Bottom">
+                                <TextBlock Text=" " FontSize="9" Margin="0,0,0,6"/>
+                                <Button Content="Guardar cambios"
+                                        Style="{StaticResource OutlineButton}"
+                                        Click="SaveSessionDetail_Click"
+                                        Height="38" Padding="16,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Metrics -->
+                    <UniformGrid Columns="3" Margin="0,0,0,24">
+                        <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,10,0">
+                            <StackPanel>
+                                <TextBlock Text="INICIO" FontSize="9" FontWeight="Bold"
+                                           Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,6"/>
+                                <TextBlock x:Name="TxtDetailStart" FontSize="18" FontWeight="Bold"
+                                           FontFamily="{StaticResource FontTitle}"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,10,0">
+                            <StackPanel>
+                                <TextBlock Text="FIN" FontSize="9" FontWeight="Bold"
+                                           Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,6"/>
+                                <TextBlock x:Name="TxtDetailEnd" FontSize="18" FontWeight="Bold"
+                                           FontFamily="{StaticResource FontTitle}"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="16,14">
+                            <StackPanel>
+                                <TextBlock Text="DURACIÓN TOTAL" FontSize="9" FontWeight="Bold"
+                                           Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,6"/>
+                                <TextBlock x:Name="TxtDetailDuration"
+                                           FontFamily="{StaticResource FontTitle}"
+                                           FontSize="18" FontWeight="Bold"
+                                           Foreground="{StaticResource AccentBrush}"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <!-- Apps table -->
+                    <TextBlock Text="APPS Y URLs EN ESTA SESIÓN" FontSize="9" FontWeight="Bold"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,10"/>
+                    <Border Background="{StaticResource BgCardBrush}" CornerRadius="8"
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                        <StackPanel>
+                            <Border Padding="14,10" Background="{StaticResource BgDarkBrush}"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" CornerRadius="8,8,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="50"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Aplicación / URL" Grid.Column="0" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Focus"            Grid.Column="1" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Unfocus"          Grid.Column="2" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Total"            Grid.Column="3" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Tipo"             Grid.Column="4" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                </Grid>
+                            </Border>
+                            <ItemsControl x:Name="DetailAppsTable" Padding="6,4,6,6">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="5" Padding="8,9" Margin="0,1">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource BgCardHoverBrush}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="50"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                                    <Ellipse Width="6" Height="6" Fill="{StaticResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="{Binding AppDisplayName}" FontSize="13"
+                                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding FormattedFocus}" FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
+                                                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding FormattedUnfocus}" FontSize="12" Foreground="#FFAA44" FontWeight="SemiBold">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding HasUnfocus}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                    <TextBlock Text="—" FontSize="12" Foreground="{StaticResource TextMutedBrush}">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding HasUnfocus}" Value="False">
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="3" Text="{Binding FormattedTotal}" FontSize="12"
+                                                           Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                                <Border Grid.Column="4" Background="{Binding BadgeBackground}" BorderBrush="{Binding BadgeBorder}"
+                                                        BorderThickness="1" CornerRadius="4" Padding="5,2" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding BadgeLabel}" FontSize="9" FontWeight="Bold" Foreground="{Binding BadgeForeground}"/>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock x:Name="TxtDetailNoApps"
+                                       Text="Los datos de esta sesión fueron eliminados."
+                                       Padding="14,20" FontSize="13"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       HorizontalAlignment="Center" TextAlignment="Center"
+                                       Visibility="Collapsed"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ── PROJECTS ───────────────────────────────────────── -->
+            <ScrollViewer x:Name="PageProjects" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
+                <StackPanel Margin="32,28,32,28">
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Proyectos" FontFamily="{StaticResource FontTitle}"
+                                       FontSize="24" FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Agrupa sesiones en proyectos y analizá cuánto tiempo le dedicás a cada uno."
+                                       FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="+ Nuevo proyecto"
+                                Style="{StaticResource PrimaryButton}"
+                                Click="NewProject_Click" Padding="18,10" VerticalAlignment="Bottom"/>
+                    </Grid>
+
+                    <!-- Project list -->
+                    <ItemsControl x:Name="ProjectList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{StaticResource BgCardBrush}"
+                                        BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8"
+                                        Padding="20,16" Margin="0,0,0,10"
+                                        Cursor="Hand" Tag="{Binding}" MouseLeftButtonUp="ProjectRow_Click">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="BorderBrush" Value="{StaticResource AccentDimBrush}"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="Bold"
+                                                       FontFamily="{StaticResource FontTitle}"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,3,0,0"
+                                                       Text="{Binding ItemCount, StringFormat='{}{0} apps/webs trackeadas'}"/>
+                                        </StackPanel>
+
+                                        <!-- Comenzar -->
+                                        <Button Grid.Column="1" Tag="{Binding}"
+                                                Click="ProjectListStart_Click"
+                                                IsEnabled="{Binding CanStart}"
+                                                VerticalAlignment="Center"
+                                                ToolTip="Comenzar sesión con este proyecto">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Content" Value="▶  Comenzar"/>
+                                                    <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                                                    <Setter Property="Foreground" Value="#0C0C0F"/>
+                                                    <Setter Property="BorderThickness" Value="0"/>
+                                                    <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
+                                                    <Setter Property="FontSize" Value="12"/>
+                                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    <Setter Property="Padding" Value="12,7"/>
+                                                    <Setter Property="Cursor" Value="Hand"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                                                        CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="bd" Property="Background" Value="#D8FF30"/>
+                                                                    </Trigger>
+                                                                    <Trigger Property="IsEnabled" Value="False">
+                                                                        <Setter TargetName="bd" Property="Background" Value="#222228"/>
+                                                                        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <!-- Pencil edit -->
+                                        <Button Grid.Column="3" Content="✎" Tag="{Binding}"
+                                                Click="ProjectEdit_Click" VerticalAlignment="Center"
+                                                ToolTip="Editar proyecto">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Background"      Value="Transparent"/>
+                                                    <Setter Property="BorderThickness" Value="0"/>
+                                                    <Setter Property="Foreground"      Value="{StaticResource TextMutedBrush}"/>
+                                                    <Setter Property="FontSize"        Value="16"/>
+                                                    <Setter Property="Cursor"          Value="Hand"/>
+                                                    <Setter Property="Padding"         Value="8,4"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                                                        CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="bd" Property="Background" Value="{StaticResource BgCardHoverBrush}"/>
+                                                                        <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <TextBlock Grid.Column="5" Text="→" FontSize="16"
+                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock x:Name="TxtNoProjects" Text="Todavía no hay proyectos. Creá uno para empezar."
+                               FontSize="13" Foreground="{StaticResource TextMutedBrush}"
+                               Margin="0,12,0,0" Visibility="Collapsed"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ── PROJECT DETAIL (view only) ─────────────────────── -->
+            <ScrollViewer x:Name="PageProjectDetail" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
+                <StackPanel Margin="32,28,32,28">
+
+                    <!-- Header row -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Click="BackToProjects_Click" Style="{StaticResource GhostButton}" Padding="8" Margin="0,0,12,0" VerticalAlignment="Center" ToolTip="Volver a proyectos">
+                            <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource AccentBrush}"/>
+                        </Button>
+                        <TextBlock Grid.Column="1" x:Name="TxtProjectDetailTitle"
+                                   FontFamily="{StaticResource FontTitle}"
+                                   FontSize="28" FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center"/>
+                        <Button Grid.Column="2" Click="GoToProjectEdit_Click" Style="{StaticResource OutlineButton}" Padding="14,8" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE70F;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Editar" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Column="4" Click="BtnStartProjectSession_Click" Style="{StaticResource PrimaryButton}" Padding="14,8" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xF5B0;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Comenzar sesión" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <!-- Alarms summary row -->
+                    <StackPanel x:Name="ProjectAlarmSummary" Orientation="Horizontal" Margin="0,0,0,16" Visibility="Collapsed">
+                        <Border x:Name="BadgeTotalAlarm" Background="#1A1A1A" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="10,4" Margin="0,0,8,0" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔔 TOTAL:" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock x:Name="TxtViewTotalAlarm" Text="—" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="BadgeSessionAlarm" Background="#1A1A1A" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="10,4" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⏱ SESIÓN:" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock x:Name="TxtViewSessionAlarm" Text="—" FontSize="11" FontWeight="SemiBold" Foreground="#FFAA44" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Tags read-only -->
+                    <Border Background="{StaticResource BgCardBrush}"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="8"
+                            Padding="14,12" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="TRACKEANDO" FontSize="9" FontWeight="Bold"
+                                       Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,10"/>
+                            <WrapPanel x:Name="ProjectViewChips"/>
+                            <TextBlock x:Name="TxtProjectViewNoItems"
+                                       Text="Este proyecto no tiene apps ni URLs asignadas todavía."
+                                       FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                                       Visibility="Collapsed"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Time tabs -->
+                    <Border Background="{StaticResource BgCardBrush}"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="8"
+                            Padding="5" Margin="0,0,0,14" HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal">
+                            <ToggleButton x:Name="ProjTabToday"  Content="Hoy"          Style="{StaticResource TabButton}" IsChecked="True" Click="ProjTimeTab_Click" Tag="Today"  Margin="0,0,2,0"/>
+                            <ToggleButton x:Name="ProjTabWeek"   Content="Esta semana"  Style="{StaticResource TabButton}" Click="ProjTimeTab_Click" Tag="Week"   Margin="0,0,2,0"/>
+                            <ToggleButton x:Name="ProjTabMonth"  Content="Este mes"     Style="{StaticResource TabButton}" Click="ProjTimeTab_Click" Tag="Month"  Margin="0,0,2,0"/>
+                            <ToggleButton x:Name="ProjTabYear"   Content="Este año"     Style="{StaticResource TabButton}" Click="ProjTimeTab_Click" Tag="Year"   Margin="0,0,2,0"/>
+                            <ToggleButton x:Name="ProjTabCustom" Content="Personalizado" Style="{StaticResource TabButton}" Click="ProjTimeTab_Click" Tag="Custom"/>
+                        </StackPanel>
+                    </Border>
+                    <StackPanel x:Name="ProjCustomDatePanel" Orientation="Horizontal" Margin="0,0,0,14" Visibility="Collapsed">
+                        <DatePicker x:Name="ProjDateFrom" Width="160" Margin="0,0,10,0" SelectedDateChanged="ProjDateRange_Changed"/>
+                        <TextBlock Text="→" VerticalAlignment="Center" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,10,0"/>
+                        <DatePicker x:Name="ProjDateTo" Width="160" SelectedDateChanged="ProjDateRange_Changed"/>
+                    </StackPanel>
+
+                    <!-- Stats table -->
+                    <Border Background="{StaticResource BgCardBrush}" CornerRadius="8"
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="0,0,0,12">
+                        <StackPanel>
+                            <Border Padding="14,10" Background="{StaticResource BgDarkBrush}"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" CornerRadius="8,8,0,0">
+                                <TextBlock Text="Tiempo por app" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                            </Border>
+                            <!-- Table header -->
+                            <Border Padding="14,8" Background="#0F0F13"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="50"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Aplicación / URL" Grid.Column="0" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Focus"            Grid.Column="1" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Total"            Grid.Column="2" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Tipo"             Grid.Column="3" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                </Grid>
+                            </Border>
+                            <ItemsControl x:Name="ProjectMainTable" Padding="6,4,6,6">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="5" Padding="8,9" Margin="0,1">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource BgCardHoverBrush}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="50"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                                    <Ellipse Width="6" Height="6" Fill="{StaticResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="{Binding AppDisplayName}" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding FormattedFocus}" FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding FormattedTotal}" FontSize="12"
+                                                           Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                                <Border Grid.Column="3" Background="{Binding BadgeBackground}" BorderBrush="{Binding BadgeBorder}"
+                                                        BorderThickness="1" CornerRadius="4" Padding="5,2" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding BadgeLabel}" FontSize="9" FontWeight="Bold" Foreground="{Binding BadgeForeground}"/>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock x:Name="TxtProjectNoData" Text="Sin datos en el período seleccionado."
+                                       Padding="14,12" FontSize="13" Foreground="{StaticResource TextMutedBrush}" Visibility="Collapsed"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Extras table -->
+                    <Border x:Name="ProjectExtrasSection" Visibility="Collapsed"
+                            Background="{StaticResource BgCardBrush}" CornerRadius="8"
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                        <StackPanel>
+                            <Border Padding="14,10" Background="{StaticResource BgDarkBrush}"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" CornerRadius="8,8,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Apps extras" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="Trackeadas en sesiones de este proyecto pero no forman parte de él."
+                                               FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,3,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            <ItemsControl x:Name="ProjectExtrasTable" Padding="6,4,6,6">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="5" Padding="8,9" Margin="0,1">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource BgCardHoverBrush}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="50"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                                    <Ellipse Width="6" Height="6" Fill="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="{Binding AppDisplayName}" FontSize="13"
+                                                               Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding FormattedTotal}" FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                                <Border Grid.Column="2" Background="{Binding BadgeBackground}" BorderBrush="{Binding BadgeBorder}"
+                                                        BorderThickness="1" CornerRadius="4" Padding="5,2" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding BadgeLabel}" FontSize="9" FontWeight="Bold" Foreground="{Binding BadgeForeground}"/>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ── PROJECT EDIT ────────────────────────────────────── -->
+            <Grid x:Name="PageProjectEdit" Visibility="Collapsed">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="32,28,32,80">
+
+                        <Grid Margin="0,0,0,24">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Click="BackFromProjectEdit_Click" Style="{StaticResource GhostButton}" Padding="8" VerticalAlignment="Center" ToolTip="Volver">
+                                <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource AccentBrush}"/>
+                            </Button>
+                            <TextBlock Grid.Column="1" x:Name="TxtProjectEditTitle"
+                                       FontFamily="{StaticResource FontTitle}"
+                                       FontSize="28" FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       VerticalAlignment="Center" Margin="12,0,0,0"/>
+                            <Button Grid.Column="2" x:Name="BtnDeleteProject" Content="Eliminar proyecto"
+                                    Style="{StaticResource DangerButton}"
+                                    Click="DeleteProject_Click"
+                                    Padding="14,8" VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <!-- Name -->
+                        <Border Background="{StaticResource BgCardBrush}"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="NOMBRE DEL PROYECTO" FontSize="9" FontWeight="Bold"
+                                           Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,6"/>
+                                <TextBox x:Name="TxtProjectName" Style="{StaticResource SearchBox}"
+                                         Height="38" Padding="10,0" Tag="Nombre del proyecto…"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Options -->
+                        <Border Background="{StaticResource BgCardBrush}"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="OPCIONES DE TRACKING" FontSize="9" FontWeight="Bold"
+                                           Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,14"/>
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Trackear también en segundo plano (Unfocus)"
+                                                   FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Si se activa, se mide el tiempo que la app está abierta pero sin foco, además del tiempo activo."
+                                                   FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,3,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <ToggleButton x:Name="ToggleProjUnfocus"
+                                                  Style="{StaticResource ToggleSwitchStyle}"
+                                                  Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Unificar versiones del mismo programa"
+                                                   FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Agrupa distintas versiones del mismo software como una sola entrada en los datos."
+                                                   FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,3,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <ToggleButton x:Name="ToggleProjUnify"
+                                                  Style="{StaticResource ToggleSwitchStyle}"
+                                                  Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Alarms -->
+                        <Border Background="{StaticResource BgCardBrush}"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="ALARMAS DE TIEMPO" FontSize="9" FontWeight="Bold"
+                                           Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,14"/>
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="160"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Alarma de tiempo total"
+                                                   FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Avisar cuando el tiempo total acumulado del proyecto llegue a:"
+                                                   FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,3,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Background="{StaticResource BgInputBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Height="32">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBox x:Name="TxtTotalAlarm" Style="{StaticResource SearchBox}"
+                                                     BorderThickness="0" Background="Transparent"
+                                                     Padding="8,0" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                                                     Tag="0" PreviewTextInput="NumericOnly_PreviewTextInput"/>
+                                            <ToggleButton x:Name="ToggleTotalUnit" Grid.Column="1" Style="{StaticResource UnitToggleStyle}" Margin="2"/>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="160"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Alarma de sesión"
+                                                   FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Avisar cuando una única sesión de este proyecto llegue a:"
+                                                   FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Margin="0,3,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Background="{StaticResource BgInputBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Height="32">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBox x:Name="TxtSessionAlarm" Style="{StaticResource SearchBox}"
+                                                     BorderThickness="0" Background="Transparent"
+                                                     Padding="8,0" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                                                     Tag="0" PreviewTextInput="NumericOnly_PreviewTextInput"/>
+                                            <ToggleButton x:Name="ToggleSessionUnit" Grid.Column="1" Style="{StaticResource UnitToggleStyle}" Margin="2"/>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Apps/URLs -->
+                        <Border Background="{StaticResource BgCardBrush}"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="16,14">
+                            <StackPanel>
+                                <TextBlock Text="APPS Y URLs DEL PROYECTO" FontSize="9" FontWeight="Bold"
+                                           Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,12"/>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TxtProjectSearch" Style="{StaticResource SearchBox}"
+                                             Tag="Buscar app o escribir URL (ej: youtube.com)…"
+                                             TextChanged="TxtProjectSearch_TextChanged" Height="36" Padding="10,0"/>
+                                    <Button Grid.Column="1" Content="+ Agregar selección"
+                                            Style="{StaticResource OutlineButton}"
+                                            Click="AddToProject_Click" Margin="8,0,0,0" Padding="14,8"/>
+                                </Grid>
+                                <Border x:Name="ProjectAppListContainer" Visibility="Collapsed"
+                                        Background="{StaticResource BgDarkBrush}"
+                                        BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="6" Margin="0,0,0,12">
+                                    <ListBox x:Name="ProjectAppList" Background="Transparent" BorderThickness="0"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                             ItemContainerStyle="{StaticResource AppListBoxItem}"
+                                             MaxHeight="180" Padding="4">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                          Style="{StaticResource AppCheckBox}">
+                                                    <TextBlock Text="{Binding DisplayName}" FontSize="13"
+                                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                </CheckBox>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Border>
+                                <TextBlock Text="SELECCIONADAS" FontSize="9" FontWeight="Bold"
+                                           Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8"/>
+                                <WrapPanel x:Name="ProjectChips"/>
+                                <TextBlock x:Name="TxtProjectNoItems"
+                                           Text="Este proyecto todavía no tiene apps ni URLs asignadas."
+                                           FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                                           Visibility="Collapsed"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Fixed Save bar -->
+                <Border VerticalAlignment="Bottom" Background="#0E0E12"
+                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="32,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Los cambios no guardados se perderán al salir."
+                                   FontSize="12" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" x:Name="BtnSaveProject" Content="Guardar proyecto"
+                                Style="{StaticResource PrimaryButton}"
+                                Click="SaveProject_Click" Padding="24,11"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- ── HELP ───────────────────────────────────────────────────────── -->
+            <ScrollViewer x:Name="PageHelp" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
+                <StackPanel Margin="32,28,32,40">
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Ayuda" FontFamily="{StaticResource FontTitle}"
+                                   FontSize="24" FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                        <Button Grid.Column="1" Content="▶  Guía rápida"
+                                Style="{StaticResource OutlineButton}"
+                                Click="ShowOnboarding_Click"
+                                Padding="14,8" VerticalAlignment="Center"/>
+                    </Grid>
+                    <TextBlock Text="Tocá el título de cada sección para expandirla o colapsarla."
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,24"/>
+
+
+
+                    <!-- Dashboard -->
+                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="10" Padding="24,20" Margin="0,0,0,12">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14" Cursor="Hand"
+                                          Tag="HelpBody_Dashboard" MouseLeftButtonUp="HelpSection_Toggle">
+                                <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600"
+                                        BorderThickness="1" CornerRadius="8" Width="36" Height="36" Margin="0,0,12,0">
+                                    <TextBlock Text="◈" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource AccentBrush}"/>
+                                </Border>
+                                <TextBlock Text="Dashboard" FontFamily="{StaticResource FontTitle}"
+                                           FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <StackPanel x:Name="HelpBody_Dashboard">
+                            <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="22" Margin="0,0,0,16">
+                                Tu vista principal de estadísticas. Muestra cuánto tiempo pasaste en cada app o sitio web, con filtros de tiempo.
+                            </TextBlock>
+                            <UniformGrid Columns="3" Margin="0,0,0,16">
+                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,4,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Filtros de tiempo" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5"/>
+                                        <TextBlock Text="Cambiá entre Hoy, Semana, Mes, Año, o un rango personalizado con fechas." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="18"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4,0,4,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Top 3" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5"/>
+                                        <TextBlock Text="Las tres apps con más tiempo aparecen destacadas arriba para verlas rápido." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="18"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4,0,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Focus vs Unfocus" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5"/>
+                                        <TextBlock Text="Cada fila muestra el tiempo activo (verde), el tiempo en segundo plano (naranja) y el total." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="18"/>
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
+                            <!-- Example table -->
+                            <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                    BorderThickness="1" CornerRadius="8" Padding="14,12">
+                                <StackPanel>
+                                    <TextBlock Text="EJEMPLO — cómo se ven los datos" FontSize="9" FontWeight="Bold"
+                                               Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,10"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="2*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="App/URL" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="Focus" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                                        <TextBlock Grid.Column="2" Text="Unfocus" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                                        <TextBlock Grid.Column="3" Text="Total" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    </Grid>
+                                    <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,6,0,8"/>
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="2*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="● Figma" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="2h 10m" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"/>
+                                        <TextBlock Grid.Column="2" Text="—" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
+                                        <TextBlock Grid.Column="3" Text="2h 10m" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <Border Grid.Column="4" Background="#1A2200" BorderBrush="#4A6600" BorderThickness="1" CornerRadius="4" Padding="5,2" VerticalAlignment="Center">
+                                            <TextBlock Text="APP" FontSize="8" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"/>
+                                        </Border>
+                                    </Grid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="2*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="● youtube.com" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="0h 45m" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"/>
+                                        <TextBlock Grid.Column="2" Text="1h 20m" FontSize="12" FontWeight="SemiBold" Foreground="#FFAA44"/>
+                                        <TextBlock Grid.Column="3" Text="2h 05m" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        <Border Grid.Column="4" Background="#0D1A2E" BorderBrush="#2A4A88" BorderThickness="1" CornerRadius="4" Padding="5,2" VerticalAlignment="Center">
+                                            <TextBlock Text="URL" FontSize="8" FontWeight="Bold" Foreground="#60AAFF"/>
+                                        </Border>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Sesiones -->
+                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="10" Padding="24,20" Margin="0,0,0,12">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14" Cursor="Hand"
+                                          Tag="HelpBody_Sesiones" MouseLeftButtonUp="HelpSection_Toggle">
+                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8" Width="36" Height="36" Margin="0,0,12,0">
+                                    <TextBlock Text="≡" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                </Border>
+                                <TextBlock Text="Sesiones" FontFamily="{StaticResource FontTitle}"
+                                           FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <StackPanel x:Name="HelpBody_Sesiones">
+                            <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="22" Margin="0,0,0,16">
+                                Cada vez que presón "Iniciar tracking" se crea una sesión. Se guardan automáticamente para que puedas ver tu historial.
+                            </TextBlock>
+                            <UniformGrid Columns="2" Margin="0,0,0,16">
+                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="0,0,6,0">
+                                    <StackPanel>
+                                        <TextBlock Text="🏷  Nombre de sesión" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                                        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="19">
+                                            Podés ponerle un nombre antes de iniciar, como "Diseño logo cliente". Si no le ponés nombre se guarda como "Sesión #1", etc. También podés renombrarla después desde el detalle.
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="6,0,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="📂  Asignar a proyecto" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                                        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="19">
+                                            Desde el detalle de una sesión podés elegir a qué proyecto pertenece. Eso hace que esa sesión cuente en las estadísticas de ese proyecto.
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
+                            <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                    BorderThickness="1" CornerRadius="8" Padding="14,12">
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="19">
+                                    <Run FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}">¿dónde se guardan los datos?</Run>
+                                    <Run> Todo se guarda en tu computadora, en </Run>
+                                    <Run FontFamily="Consolas" Foreground="{StaticResource AccentBrush}">%APPDATA%\FocusTracker</Run>
+                                    <Run>. No se envía nada a internet. Si desinstalás la app, los datos quedan — podés borrarlos manualmente si querés.</Run>
+                                </TextBlock>
+                            </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Proyectos -->
+                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="10" Padding="24,20" Margin="0,0,0,12">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14" Cursor="Hand"
+                                          Tag="HelpBody_Proyectos" MouseLeftButtonUp="HelpSection_Toggle">
+                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8" Width="36" Height="36" Margin="0,0,12,0">
+                                    <TextBlock Text="◻" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                </Border>
+                                <TextBlock Text="Proyectos" FontFamily="{StaticResource FontTitle}"
+                                           FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <StackPanel x:Name="HelpBody_Proyectos">
+                            <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="22" Margin="0,0,0,16">
+                                Los proyectos sirven para agrupar trabajo relacionado. Creá un proyecto "Rediseño web", asignále Figma y VS Code, y después podés ver cuánto tiempo total le dedicaste.
+                            </TextBlock>
+                            <UniformGrid Columns="3" Margin="0,0,0,16">
+                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,4,0">
+                                    <StackPanel>
+                                        <TextBlock Text="➕  Crear" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5"/>
+                                        <TextBlock Text="Tocá &quot;+ Nuevo proyecto&quot;, ponerle un nombre y agregar las apps y webs que forman parte." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="18"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4,0,4,0">
+                                    <StackPanel>
+                                        <TextBlock Text="✎  Editar" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5"/>
+                                        <TextBlock Text="Tocá el ícono de lápiz en el listado, o el botón &quot;Editar&quot; dentro del detalle del proyecto." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="18"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4,0,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="▶  Comenzar" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5"/>
+                                        <TextBlock Text="Cada proyecto tiene un botón &quot;Comenzar&quot; que inicia una sesión con sus apps ya cargadas, lista para trackear." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="18"/>
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
+                            <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600"
+                                    BorderThickness="1" CornerRadius="8" Padding="14,12">
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource AccentBrush}" LineHeight="19">
+                                    <Run FontWeight="Bold">Tip:</Run>
+                                    <Run>Si en una sesión trackés apps que no forman parte del proyecto, aparecen en "Apps extras" para no confundirlas con las del proyecto.</Run>
+                                </TextBlock>
+                            </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- System tray -->
+                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="10" Padding="24,20" Margin="0,0,0,12">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14" Cursor="Hand"
+                                          Tag="HelpBody_Tray" MouseLeftButtonUp="HelpSection_Toggle">
+                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8" Width="36" Height="36" Margin="0,0,12,0">
+                                    <TextBlock Text="🔔" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Ícono en la barra del sistema" FontFamily="{StaticResource FontTitle}"
+                                           FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <StackPanel x:Name="HelpBody_Tray">
+                            <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="22">
+                                Cuando cerrás la ventana con la X, la app no se cierra — sigue midiendo en segundo plano y aparece como un ícono cerca del reloj. Dobìl click para volver a abrirla. Click derecho te da opciones rápidas: mostrar la ventana, detener el tracking o cerrar del todo.
+                            </TextBlock>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Modo Lite -->
+                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="10" Padding="24,20">
+                        <StackPanel>
+                            <!-- Clickable header -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14" Cursor="Hand"
+                                        Tag="HelpBody_Lite" MouseLeftButtonUp="HelpSection_Toggle">
+                                <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600"
+                                        BorderThickness="1" CornerRadius="8" Width="36" Height="36" Margin="0,0,12,0">
+                                    <TextBlock Text="⚡" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600" BorderThickness="1"
+                                                CornerRadius="4" Padding="6,2" Margin="0,0,8,0" VerticalAlignment="Center">
+                                            <TextBlock Text="LITE" FontSize="9" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"/>
+                                        </Border>
+                                        <TextBlock Text="Modo Lite" FontFamily="{StaticResource FontTitle}"
+                                                   FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="Tracking rápido sin historial permanente"
+                                               FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Collapsible body -->
+                            <StackPanel x:Name="HelpBody_Lite">
+                                <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="22" Margin="0,0,0,16">
+                                    El Modo Lite simplifica la app a lo esencial: buscás, seleccionás, medís. Sin proyectos, sin historial permanente, sin configuración. Ideal para una reunión, una tarea puntual o cualquier cosa que querés medir una sola vez.
+                                </TextBlock>
+
+                                <!-- Step-by-step flow -->
+                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,12">
+                                    <StackPanel>
+                                        <TextBlock Text="CÓMO USARLO" FontSize="9" FontWeight="Bold"
+                                                   Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,12"/>
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                            <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600" BorderThickness="1"
+                                                    CornerRadius="14" Width="24" Height="24" VerticalAlignment="Top" Margin="0,1,0,0">
+                                                <TextBlock Text="1" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Activá el Modo Lite" FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,2"/>
+                                                <TextBlock Text="Tocá ⚡ Modo Lite en la pantalla de Setup y tracking (esquina superior derecha)."
+                                                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                            <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600" BorderThickness="1"
+                                                    CornerRadius="14" Width="24" Height="24" VerticalAlignment="Top" Margin="0,1,0,0">
+                                                <TextBlock Text="2" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Seleccioná qué trackear" FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,2"/>
+                                                <TextBlock Text="Buscá apps o escribí URLs. Las seleccionadas aparecen como chips a la derecha."
+                                                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                            <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600" BorderThickness="1"
+                                                    CornerRadius="14" Width="24" Height="24" VerticalAlignment="Top" Margin="0,1,0,0">
+                                                <TextBlock Text="3" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Iniciá y detené cuando termines" FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,2"/>
+                                                <TextBlock Text="Al tocar Detener aparece el resumen inmediato con Focus y Unfocus de cada app."
+                                                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                            <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600" BorderThickness="1"
+                                                    CornerRadius="14" Width="24" Height="24" VerticalAlignment="Top" Margin="0,1,0,0">
+                                                <TextBlock Text="4" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="Guardá o descartá" FontSize="13" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,2"/>
+                                                <TextBlock FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap">
+                                                    <Run FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}">Guardar sesión</Run>
+                                                    <Run>→ queda en el historial.</Run>
+                                                    <Run FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}">Continuar sin guardar</Run>
+                                                    <Run>→ se descarta y volvés al modo Lite.</Run>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Key difference callout -->
+                                <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600"
+                                        BorderThickness="1" CornerRadius="8" Padding="14,12">
+                                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource AccentBrush}" LineHeight="19">
+                                        <Run FontWeight="Bold">¿Cuándo usarlo?</Run>
+                                        <Run>Usá el modo Lite cuando no necesitás guardar el historial ni asociar tiempo a un proyecto — solo querés saber cuánto tardaste en algo puntual.</Run>
+                                    </TextBlock>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Reset Data -->
+                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="10" Padding="24,20" Margin="0,12,0,0">
+                        <StackPanel>
+                            <TextBlock Text="PELIGRO" FontSize="9" FontWeight="Bold" Foreground="{StaticResource DangerBrush}" Margin="0,0,0,14"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Borrar registros y reiniciar app" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="Esto eliminará permanentemente todos tus proyectos, sesiones, datos de tracking y reiniciará el tutorial. Esta acción no se puede deshacer."
+                                               FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,0" LineHeight="18"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Borrar registros" Style="{StaticResource DangerButton}" Click="BtnResetAllData_Click" Padding="16,10" VerticalAlignment="Center" Margin="20,0,0,0"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ── LITE MODE ─────────────────────────────────────────── -->
+            <Grid x:Name="PageLite" Visibility="Collapsed"
+                  Background="{StaticResource BgDarkBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header matching onboarding -->
+                <Border Grid.Row="0" Padding="32,22,32,18"
+                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                        Background="#0E0E12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                                <Border Background="#1A2200" BorderBrush="#4A6600" BorderThickness="1"
+                                        CornerRadius="5" Padding="7,3" Margin="0,0,10,0" VerticalAlignment="Center">
+                                    <TextBlock Text="LITE" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"/>
+                                </Border>
+                                <TextBlock Text="Modo Lite activado"
+                                           FontFamily="{StaticResource FontTitle}"
+                                           FontSize="22" FontWeight="Bold"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="Tracking rápido, sin historial permanente."
+                                       FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="Salir"
+                                Style="{StaticResource OutlineButton}"
+                                Click="ExitLiteMode_Click"
+                                Padding="14,8" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Main content: single column for small window -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,20">
+                    <StackPanel Width="360" HorizontalAlignment="Center">
+                        <!-- Search -->
+                        <TextBlock Text="BUSCAR" FontSize="9" FontWeight="Bold"
+                                   Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8"/>
+                        <Border Background="{StaticResource BgCardBrush}"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="1" Margin="0,0,0,8">
+                            <TextBox x:Name="TxtLiteSearch"
+                                     Style="{StaticResource SearchBox}"
+                                     Tag="Buscá una app o escribí una URL…"
+                                     BorderThickness="0" Background="Transparent"
+                                     TextChanged="TxtLiteSearch_TextChanged"/>
+                        </Border>
+                        <Border x:Name="LiteListContainer"
+                                Background="{StaticResource BgCardBrush}"
+                                CornerRadius="8" BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" Visibility="Collapsed" Margin="0,0,0,16">
+                            <ListBox x:Name="LiteAppList" Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     ItemContainerStyle="{StaticResource AppListBoxItem}"
+                                     MaxHeight="200" Padding="6,4,6,4">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                  Style="{StaticResource AppCheckBox}"
+                                                  Checked="LiteCheckBox_Changed" Unchecked="LiteCheckBox_Changed">
+                                            <TextBlock Text="{Binding DisplayName}" FontSize="13"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        </CheckBox>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Border>
+
+                        <!-- Selected chips -->
+                        <TextBlock Text="SELECCIONADAS" FontSize="9" FontWeight="Bold"
+                                   Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,8"/>
+                        <Border x:Name="LiteSelectedPanel"
+                                Background="{StaticResource BgCardBrush}"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="8"
+                                Padding="14,12" Margin="0,0,0,16" Visibility="Collapsed">
+                            <WrapPanel x:Name="LiteChips"/>
+                        </Border>
+                        <TextBlock x:Name="TxtLiteEmpty"
+                                   Text="Todavía no seleccionaste nada. Buscá una app o URL arriba."
+                                   FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                                   TextWrapping="Wrap" Margin="0,0,0,16"/>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Bottom bar: Start / Stop -->
+                <Border Grid.Row="2" Background="#0E0E12"
+                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
+                        Padding="32,14">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="BtnLiteStart" Content="▶  Iniciar tracking"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Click="BtnLiteStart_Click" Padding="28,12" Margin="0,0,12,0" IsEnabled="False"/>
+                            <Button x:Name="BtnLiteStop" Content="■  Detener"
+                                    Style="{StaticResource DangerButton}"
+                                    Click="BtnLiteStop_Click" Padding="28,12" IsEnabled="False"/>
+                        </StackPanel>
+                        <!-- Session alarm input for Lite mode -->
+                        <Border Grid.Column="1" Background="{StaticResource BgCardBrush}"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="8" Padding="1" Width="160">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBox x:Name="TxtLiteAlarm"
+                                         Style="{StaticResource SearchBox}"
+                                         Tag="Alarma…"
+                                         BorderThickness="0" Background="Transparent"
+                                         HorizontalContentAlignment="Center"
+                                         PreviewTextInput="NumericOnly_PreviewTextInput"/>
+                                <ToggleButton x:Name="ToggleLiteAlarmUnit" Grid.Column="1" Style="{StaticResource UnitToggleStyle}" Margin="2"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- ── LITE RESULT ────────────────────────────────────────── -->
+            <Grid x:Name="PageLiteResult" Visibility="Collapsed"
+                  Background="{StaticResource BgDarkBrush}">
+                <StackPanel Margin="32,28,32,28" MaxWidth="640" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <Border Background="#1A2200" BorderBrush="#4A6600" BorderThickness="1"
+                                CornerRadius="5" Padding="7,3" Margin="0,0,10,0" VerticalAlignment="Center">
+                            <TextBlock Text="LITE" FontSize="10" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"/>
+                        </Border>
+                        <TextBlock Text="Resultado de la sesión"
+                                   FontFamily="{StaticResource FontTitle}"
+                                   FontSize="24" FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtLiteResultSub"
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,20"/>
+
+                    <Border Background="{StaticResource BgCardBrush}" CornerRadius="8"
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="0,0,0,24">
+                        <StackPanel>
+                            <Border Padding="14,10" Background="{StaticResource BgDarkBrush}"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" CornerRadius="8,8,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="50"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="App / URL"   Grid.Column="0" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Focus"       Grid.Column="1" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Total"       Grid.Column="2" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                    <TextBlock Text="Tipo"        Grid.Column="3" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
+                                </Grid>
+                            </Border>
+                            <ItemsControl x:Name="LiteResultTable" Padding="6,4,6,6">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="5" Padding="8,9" Margin="0,1">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource BgCardHoverBrush}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="50"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                                    <Ellipse Width="6" Height="6" Fill="{StaticResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="{Binding AppDisplayName}" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding FormattedFocus}" FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding FormattedTotal}" FontSize="12"
+                                                           Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                                <Border Grid.Column="3" Background="{Binding BadgeBackground}" BorderBrush="{Binding BadgeBorder}"
+                                                        BorderThickness="1" CornerRadius="4" Padding="5,2" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding BadgeLabel}" FontSize="9" FontWeight="Bold" Foreground="{Binding BadgeForeground}"/>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button Content="Guardar sesión"
+                                Style="{StaticResource PrimaryButton}"
+                                Click="BtnLiteSave_Click" Padding="28,12" Margin="0,0,12,0"/>
+                        <Button Content="Continuar sin guardar"
+                                Style="{StaticResource OutlineButton}"
+                                Click="BtnLiteDiscard_Click" Padding="28,12"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+        </Grid>
+
+
+        <!-- ══ ONBOARDING OVERLAY ════════════════════════════════════ -->
+        <!-- Sits on top of everything, col-span 2, fades out when done -->
+        <Grid x:Name="OnboardingOverlay" Grid.ColumnSpan="2"
+              Background="{StaticResource BgDarkBrush}"
+              Opacity="1" Visibility="Collapsed"
+              Panel.ZIndex="200">
+            <Grid.Resources>
+                <Storyboard x:Key="FadeOut">
+                    <DoubleAnimation Storyboard.TargetName="OnboardingOverlay"
+                                     Storyboard.TargetProperty="Opacity"
+                                     From="1" To="0" Duration="0:0:0.5"/>
+                </Storyboard>
+            </Grid.Resources>
+
+            <Grid x:Name="OB_Step1" Visibility="Visible">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="580" Margin="48,0">
+                    <Border Background="#141418" BorderBrush="#222228" BorderThickness="1"
+                            CornerRadius="12" Padding="24,20" Margin="0,0,0,32" Width="480">
+                        <StackPanel>
+                            <TextBlock Text="HOY" FontSize="9" FontWeight="Bold" Foreground="#44444F" Margin="0,0,0,12"/>
+                            <Grid Margin="0,0,0,7">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/><ColumnDefinition Width="55"/></Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal"><Ellipse Width="6" Height="6" Fill="#C8FF00" VerticalAlignment="Center" Margin="0,0,7,0"/><TextBlock Text="Figma" FontSize="12" Foreground="#EEEEF2"/></StackPanel>
+                                <Border Grid.Column="1" Height="7" CornerRadius="4" Background="#1A2200" Margin="0,4,10,4"><Border CornerRadius="4" Background="#C8FF00" HorizontalAlignment="Left" Width="190"/></Border>
+                                <TextBlock Grid.Column="2" Text="2h 41m" FontSize="11" FontWeight="Bold" Foreground="#C8FF00"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,7">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/><ColumnDefinition Width="55"/></Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal"><Ellipse Width="6" Height="6" Fill="#60AAFF" VerticalAlignment="Center" Margin="0,0,7,0"/><TextBlock Text="youtube.com" FontSize="12" Foreground="#EEEEF2"/></StackPanel>
+                                <Border Grid.Column="1" Height="7" CornerRadius="4" Background="#0D1A2E" Margin="0,4,10,4"><Border CornerRadius="4" Background="#60AAFF" HorizontalAlignment="Left" Width="100"/></Border>
+                                <TextBlock Grid.Column="2" Text="1h 08m" FontSize="11" FontWeight="Bold" Foreground="#60AAFF"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/><ColumnDefinition Width="55"/></Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal"><Ellipse Width="6" Height="6" Fill="#C8FF00" VerticalAlignment="Center" Margin="0,0,7,0"/><TextBlock Text="VS Code" FontSize="12" Foreground="#EEEEF2"/></StackPanel>
+                                <Border Grid.Column="1" Height="7" CornerRadius="4" Background="#1A2200" Margin="0,4,10,4"><Border CornerRadius="4" Background="#C8FF00" HorizontalAlignment="Left" Width="75"/></Border>
+                                <TextBlock Grid.Column="2" Text="0h 52m" FontSize="11" FontWeight="Bold" Foreground="#C8FF00"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="Conocé cómo usás tu tiempo."
+                               FontFamily="{StaticResource FontTitle}" FontSize="30" FontWeight="800"
+                               Foreground="{StaticResource TextPrimaryBrush}" TextAlignment="Center" Margin="0,0,0,12" TextWrapping="Wrap"/>
+                    <TextBlock Text="Focus Tracker mide en silencio cuánto tiempo pasás en cada app, programa o sitio web — ya sea trabajando, estudiando o jugando."
+                               FontFamily="{StaticResource FontBody}" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"
+                               TextAlignment="Center" TextWrapping="Wrap" LineHeight="22"/>
+                </StackPanel>
+                <Grid Grid.Row="1" Margin="48,0,48,32">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left">
+                        <Button Content="Omitir" Click="OB_Skip_Click" Style="{StaticResource GhostButton}" Padding="16,10"/>
+                    </StackPanel>
+
+                    <!-- dots -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="1" Click="OB_Dot_Click" Background="{StaticResource AccentBrush}"/>
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="2" Click="OB_Dot_Click" Background="{StaticResource BorderBrush}"/>
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="3" Click="OB_Dot_Click" Background="{StaticResource BorderBrush}"/>
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="4" Click="OB_Dot_Click" Background="{StaticResource BorderBrush}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Continuar →" Click="OB_Next_Click" Style="{StaticResource PrimaryButton}" Padding="24,10"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <Grid x:Name="OB_Step2" Visibility="Collapsed">
+                <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="580" Margin="48,0">
+                    <Border Background="#141418" BorderBrush="#222228" BorderThickness="1"
+                            CornerRadius="12" Padding="24,20" Margin="0,0,0,32" Width="480">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                <Border Background="#C8FF00" CornerRadius="6" Padding="12,6" Margin="0,0,4,0"><TextBlock Text="Hoy" FontSize="11" FontWeight="Bold" Foreground="#0C0C0F"/></Border>
+                                <Border Background="#141418" BorderBrush="#222228" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,0,4,0"><TextBlock Text="Semana" FontSize="11" Foreground="#7A7A92"/></Border>
+                                <Border Background="#141418" BorderBrush="#222228" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="0,0,4,0"><TextBlock Text="Mes" FontSize="11" Foreground="#7A7A92"/></Border>
+                                <Border Background="#141418" BorderBrush="#222228" BorderThickness="1" CornerRadius="6" Padding="12,6"><TextBlock Text="Personalizado" FontSize="11" Foreground="#7A7A92"/></Border>
+                            </StackPanel>
+                            <UniformGrid Columns="3">
+                                <Border Background="#1A2200" BorderBrush="#4A6600" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,5,0">
+                                    <StackPanel><TextBlock Text="FIGMA" FontSize="8" Foreground="#44444F" Margin="0,0,0,3"/>
+                                    <TextBlock Text="2h 41m" FontSize="16" FontWeight="Bold" Foreground="#C8FF00" FontFamily="{StaticResource FontTitle}"/>
+                                    <TextBlock Text="3 sesiones" FontSize="10" Foreground="#7A7A92"/></StackPanel>
+                                </Border>
+                                <Border Background="#0D1A2E" BorderBrush="#2A4A88" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,5,0">
+                                    <StackPanel><TextBlock Text="YOUTUBE" FontSize="8" Foreground="#44444F" Margin="0,0,0,3"/>
+                                    <TextBlock Text="1h 08m" FontSize="16" FontWeight="Bold" Foreground="#60AAFF" FontFamily="{StaticResource FontTitle}"/>
+                                    <TextBlock Text="2 sesiones" FontSize="10" Foreground="#7A7A92"/></StackPanel>
+                                </Border>
+                                <Border Background="#1A2200" BorderBrush="#4A6600" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                                    <StackPanel><TextBlock Text="VS CODE" FontSize="8" Foreground="#44444F" Margin="0,0,0,3"/>
+                                    <TextBlock Text="0h 52m" FontSize="16" FontWeight="Bold" Foreground="#C8FF00" FontFamily="{StaticResource FontTitle}"/>
+                                    <TextBlock Text="1 sesión" FontSize="10" Foreground="#7A7A92"/></StackPanel>
+                                </Border>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="Analizá tus hábitos a lo largo del tiempo."
+                               FontFamily="{StaticResource FontTitle}" FontSize="30" FontWeight="800"
+                               Foreground="{StaticResource TextPrimaryBrush}" TextAlignment="Center" Margin="0,0,0,12" TextWrapping="Wrap"/>
+                    <TextBlock Text="El Dashboard muestra cuánto tiempo pasaste en cada app o sitio, con filtros por día, semana, mes o fechas personalizadas."
+                               FontFamily="{StaticResource FontBody}" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"
+                               TextAlignment="Center" TextWrapping="Wrap" LineHeight="22"/>
+                </StackPanel>
+                <Grid Grid.Row="1" Margin="48,0,48,32">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left">
+                        <Button Click="OB_Back_Click" Style="{StaticResource GhostButton}" Padding="8" ToolTip="Volver">
+                            <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" Foreground="{StaticResource TextMutedBrush}"/>
+                        </Button>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="1" Click="OB_Dot_Click" Background="{StaticResource BorderBrush}"/>
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="2" Click="OB_Dot_Click" Background="{StaticResource AccentBrush}"/>
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="3" Click="OB_Dot_Click" Background="{StaticResource BorderBrush}"/>
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="4" Click="OB_Dot_Click" Background="{StaticResource BorderBrush}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Omitir" Click="OB_Skip_Click" Style="{StaticResource GhostButton}" Padding="16,10" Margin="0,0,8,0"/>
+                        <Button Content="Continuar →" Click="OB_Next_Click" Style="{StaticResource PrimaryButton}" Padding="24,10"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <Grid x:Name="OB_Step3" Visibility="Collapsed">
+                <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="580" Margin="48,0">
+                    <Border Background="#141418" BorderBrush="#222228" BorderThickness="1"
+                            CornerRadius="12" Padding="24,20" Margin="0,0,0,32" Width="480">
+                        <StackPanel>
+                            <TextBlock Text="MIS PROYECTOS" FontSize="8" FontWeight="Bold" Foreground="#44444F" Margin="0,0,0,12"/>
+                            <Border Background="#1A2200" BorderBrush="#4A6600" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="0,0,0,6">
+                                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Rediseño web cliente" FontSize="13" FontWeight="Bold" Foreground="#EEEEF2" FontFamily="{StaticResource FontTitle}"/>
+                                    <TextBlock Text="Figma · VS Code · youtube.com" FontSize="10" Foreground="#44444F" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="#C8FF00" CornerRadius="6" Padding="10,5" VerticalAlignment="Center">
+                                    <TextBlock Text="▶  Comenzar" FontSize="10" FontWeight="Bold" Foreground="#0C0C0F"/>
+                                </Border></Grid>
+                            </Border>
+                            <Border Background="#141418" BorderBrush="#222228" BorderThickness="1" CornerRadius="8" Padding="14,12">
+                                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Estudio programación" FontSize="13" FontWeight="Bold" Foreground="#EEEEF2" FontFamily="{StaticResource FontTitle}"/>
+                                    <TextBlock Text="VS Code · Notion · github.com" FontSize="10" Foreground="#44444F" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="#1A2200" BorderBrush="#4A6600" BorderThickness="1" CornerRadius="6" Padding="10,5" VerticalAlignment="Center">
+                                    <TextBlock Text="▶  Comenzar" FontSize="10" FontWeight="SemiBold" Foreground="#C8FF00"/>
+                                </Border></Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="Organizá tu trabajo en proyectos."
+                               FontFamily="{StaticResource FontTitle}" FontSize="30" FontWeight="800"
+                               Foreground="{StaticResource TextPrimaryBrush}" TextAlignment="Center" Margin="0,0,0,12" TextWrapping="Wrap"/>
+                    <TextBlock Text="Creá proyectos para agrupar apps y webs relacionadas. Después podés ver cuánto tiempo total le dedicaste a cada proyecto."
+                               FontFamily="{StaticResource FontBody}" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"
+                               TextAlignment="Center" TextWrapping="Wrap" LineHeight="22"/>
+                </StackPanel>
+                <Grid Grid.Row="1" Margin="48,0,48,32">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left">
+                        <Button Click="OB_Back_Click" Style="{StaticResource GhostButton}" Padding="8" ToolTip="Volver">
+                            <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" Foreground="{StaticResource TextMutedBrush}"/>
+                        </Button>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="1" Click="OB_Dot_Click" Background="{StaticResource BorderBrush}"/>
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="2" Click="OB_Dot_Click" Background="{StaticResource BorderBrush}"/>
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="3" Click="OB_Dot_Click" Background="{StaticResource AccentBrush}"/>
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="4" Click="OB_Dot_Click" Background="{StaticResource BorderBrush}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Omitir" Click="OB_Skip_Click" Style="{StaticResource GhostButton}" Padding="16,10" Margin="0,0,8,0"/>
+                        <Button Content="Continuar →" Click="OB_Next_Click" Style="{StaticResource PrimaryButton}" Padding="24,10"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <Grid x:Name="OB_Step4" Visibility="Collapsed">
+                <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="580" Margin="48,0">
+                    <Border Background="#141418" BorderBrush="#222228" BorderThickness="1"
+                            CornerRadius="12" Padding="24,20" Margin="0,0,0,32" Width="480">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                <Border Background="#1A2200" BorderBrush="#4A6600" BorderThickness="1" CornerRadius="5" Padding="7,3" Margin="0,0,10,0" VerticalAlignment="Center">
+                                    <TextBlock Text="LITE" FontSize="9" FontWeight="Bold" Foreground="#C8FF00"/>
+                                </Border>
+                                <TextBlock Text="Modo Lite activado" FontSize="14" FontWeight="SemiBold" Foreground="#EEEEF2" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <!-- Simplified UI preview -->
+                            <Border Background="#111115" BorderBrush="#222228" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,8">
+                                <TextBlock Text="Buscá una app o escribí una URL…" FontSize="12" Foreground="#44444F"/>
+                            </Border>
+                            <WrapPanel Margin="0,0,0,12">
+                                <Border Background="#1A2200" BorderBrush="#4A6600" BorderThickness="1" CornerRadius="5" Padding="8,4" Margin="0,0,6,6">
+                                    <TextBlock Text="Figma  ✕" FontSize="11" Foreground="#C8FF00"/>
+                                </Border>
+                                <Border Background="#0D1A2E" BorderBrush="#2A4A88" BorderThickness="1" CornerRadius="5" Padding="8,4" Margin="0,0,6,6">
+                                    <TextBlock Text="🔗 youtube.com  ✕" FontSize="11" Foreground="#60AAFF"/>
+                                </Border>
+                            </WrapPanel>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Border Background="#C8FF00" CornerRadius="7" Padding="20,9" Margin="0,0,10,0">
+                                    <TextBlock Text="▶  Iniciar" FontSize="12" FontWeight="Bold" Foreground="#0C0C0F"/>
+                                </Border>
+                                <Border Background="Transparent" BorderBrush="#FF4D6A" BorderThickness="1" CornerRadius="7" Padding="20,9">
+                                    <TextBlock Text="■  Detener" FontSize="12" FontWeight="SemiBold" Foreground="#FF4D6A"/>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="Modo Lite: rápido y sin historial."
+                               FontFamily="{StaticResource FontTitle}" FontSize="30" FontWeight="800"
+                               Foreground="{StaticResource TextPrimaryBrush}" TextAlignment="Center" Margin="0,0,0,12" TextWrapping="Wrap"/>
+                    <TextBlock Text="Activá el Modo Lite para un tracking sin complicaciones. Al detener te muestra los datos al instante — guardás solo si querés. Perfecto para sesiones únicas."
+                               FontFamily="{StaticResource FontBody}" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"
+                               TextAlignment="Center" TextWrapping="Wrap" LineHeight="22"/>
+                </StackPanel>
+                <Grid Grid.Row="1" Margin="48,0,48,32">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left">
+                        <Button Click="OB_Back_Click" Style="{StaticResource GhostButton}" Padding="8" ToolTip="Volver">
+                            <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" Foreground="{StaticResource TextMutedBrush}"/>
+                        </Button>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="1" Click="OB_Dot_Click" Background="{StaticResource BorderBrush}"/>
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="2" Click="OB_Dot_Click" Background="{StaticResource BorderBrush}"/>
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="3" Click="OB_Dot_Click" Background="{StaticResource BorderBrush}"/>
+                        <Button Style="{StaticResource DotButtonStyle}" Tag="4" Click="OB_Dot_Click" Background="{StaticResource AccentBrush}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Empezar a usar Focus Tracker"
+                                Click="OB_Finish_Click" Style="{StaticResource PrimaryButton}"
+                                Padding="24,10" HorizontalAlignment="Right"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+        </Grid>
+
+</Grid>
+</Window>
+
