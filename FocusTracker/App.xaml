@@ -466,37 +466,6 @@
                 </Setter>
             </Style>
 
-            <!-- ── Toggle Switch ──────────────────────────────────────── -->
-            <Style x:Key="ToggleSwitchStyle" TargetType="ToggleButton">
-                <Setter Property="Width"  Value="40"/>
-                <Setter Property="Height" Value="22"/>
-                <Setter Property="Cursor" Value="Hand"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="ToggleButton">
-                            <Grid>
-                                <Border x:Name="track" Width="40" Height="22" CornerRadius="11"
-                                        Background="{StaticResource BorderBrush}"/>
-                                <Ellipse x:Name="thumb" Width="16" Height="16"
-                                         Fill="{StaticResource TextMutedBrush}"
-                                         HorizontalAlignment="Left" Margin="3,0,0,0"/>
-                            </Grid>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsChecked" Value="True">
-                                    <Setter TargetName="track" Property="Background" Value="{StaticResource AccentBrush}"/>
-                                    <Setter TargetName="thumb" Property="Fill" Value="#0C0C0F"/>
-                                    <Setter TargetName="thumb" Property="HorizontalAlignment" Value="Right"/>
-                                    <Setter TargetName="thumb" Property="Margin" Value="0,0,3,0"/>
-                                </Trigger>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="track" Property="Opacity" Value="0.85"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-
             <!-- ── Unit Toggle (Min/Hrs) ─────────────────────────────── -->
             <Style x:Key="UnitToggleStyle" TargetType="ToggleButton">
                 <Setter Property="Width"  Value="70"/>
@@ -628,6 +597,38 @@
                                 <Trigger Property="IsSelected" Value="True">
                                     <Setter TargetName="bd" Property="Background" Value="{StaticResource AccentBgBrush}"/>
                                     <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- ── Toggle Switch ─────────────────────────────────────────── -->
+            <Style x:Key="ToggleSwitchStyle" TargetType="ToggleButton">
+                <Setter Property="Width"  Value="44"/>
+                <Setter Property="Height" Value="24"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Grid>
+                                <!-- Track -->
+                                <Border x:Name="Track" Width="44" Height="24" CornerRadius="12"
+                                        Background="#2A2A35" BorderBrush="#3A3A50" BorderThickness="1"/>
+                                <!-- Knob -->
+                                <Ellipse x:Name="Knob" Width="16" Height="16"
+                                         Fill="#888898" HorizontalAlignment="Left" Margin="4,0,0,0"/>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="Track" Property="Background" Value="{StaticResource AccentBgBrush}"/>
+                                    <Setter TargetName="Track" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                    <Setter TargetName="Knob"  Property="Fill"        Value="{StaticResource AccentBrush}"/>
+                                    <Setter TargetName="Knob"  Property="Margin"      Value="24,0,0,0"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Track" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>

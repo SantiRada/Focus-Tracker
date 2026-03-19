@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Forms;
 using FocusTracker.Data;
 using FocusTracker.Services;
+using FocusTracker.Settings;
 using Application = System.Windows.Application;
 
 namespace FocusTracker;
@@ -13,7 +14,8 @@ public partial class App : Application
 {
     public static DatabaseService Database { get; private set; } = null!;
     public static TrackingService Tracker  { get; private set; } = null!;
-    public static NotifyIcon? TrayIcon     { get; private set; }
+    public static NotifyIcon?     TrayIcon { get; private set; }
+    public static AppSettings     Settings => AppSettings.Instance;
 
     private static System.Threading.Mutex? _mutex;
 
@@ -45,7 +47,10 @@ public partial class App : Application
 
         try
         {
-            Database = new DatabaseService();
+            // Load settings first so we know the custom data folder
+            _ = AppSettings.Instance;
+
+            Database = new DatabaseService(AppSettings.Instance.DataFolder);
             Tracker  = new TrackingService(Database);
             InitTrayIcon();
 

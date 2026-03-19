@@ -5,6 +5,27 @@ namespace FocusTracker.Helpers;
 
 public static class WinApi
 {
+    // ── Idle / last input detection ───────────────────────────────────────
+    [StructLayout(LayoutKind.Sequential)]
+    public struct LASTINPUTINFO
+    {
+        public uint cbSize;
+        public uint dwTime;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
+
+    /// <summary>Returns time elapsed since the last keyboard or mouse input.</summary>
+    public static TimeSpan GetIdleTime()
+    {
+        var info = new LASTINPUTINFO { cbSize = (uint)Marshal.SizeOf(typeof(LASTINPUTINFO)) };
+        if (!GetLastInputInfo(ref info)) return TimeSpan.Zero;
+        uint idleMs = unchecked((uint)Environment.TickCount - info.dwTime);
+        return TimeSpan.FromMilliseconds(idleMs);
+    }
+
+    // ── Window / process ─────────────────────────────────────────────────
     [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
 

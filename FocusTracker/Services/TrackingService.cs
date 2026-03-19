@@ -49,8 +49,15 @@ public class TrackingService : IDisposable
     private bool _sessionAlarmTriggered;
     private bool _totalAlarmTriggered;
 
+    // ── Idle detection ────────────────────────────────────────────────────
+    private static readonly TimeSpan IdleThreshold = TimeSpan.FromSeconds(30);
+    /// <summary>When true, tracking will auto-stop if user idle exceeds 30 seconds.</summary>
+    public bool IdleDetectionEnabled { get; set; }
+    /// <summary>Fired on the tracking thread when idle threshold is exceeded. UI should call StopTracking.</summary>
+    public event Action? IdleDetected;
+
     public event Action<string, TimeSpan>? FocusChanged;
-    public event Action<string, string>? AlarmTriggered;
+    public event Action<string, string>?   AlarmTriggered;
 
     public TrackingService(DatabaseService db) => _db = db;
 
@@ -151,15 +158,22 @@ public class TrackingService : IDisposable
     {
         while (_isRunning)
         {
-            try 
-            { 
-                Tick(); 
+            try
+            {
+                // Idle detection — check before Tick so we stop cleanly
+                if (IdleDetectionEnabled && WinApi.GetIdleTime() >= IdleThreshold)
+                {
+                    IdleDetected?.Invoke();
+                    break; // exit loop; StopTracking will be called by the UI handler
+                }
+
+                Tick();
                 if (++_flushCounter >= 2) // Every 1 second (500ms * 2)
                 {
                     _flushCounter = 0;
                     PeriodicFlush(DateTime.Now);
                 }
-            } 
+            }
             catch { }
             Thread.Sleep(500);
         }

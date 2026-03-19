@@ -80,6 +80,13 @@
 
                     <Border x:Name="NavDivider1" Height="1" Background="{StaticResource BorderBrush}" Margin="8,10,8,10"/>
 
+                    <Button x:Name="BtnNavSettings" Style="{StaticResource SidebarButtonStyle}" Click="NavSettings_Click" ToolTip="Configuración">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE713;" Style="{StaticResource SidebarIconStyle}"/>
+                            <TextBlock x:Name="TxtNavSettings" Text="Configuración" Style="{StaticResource SidebarTextStyle}"/>
+                        </StackPanel>
+                    </Button>
+
                     <Button x:Name="BtnNavHelp" Style="{StaticResource SidebarButtonStyle}" Click="NavHelp_Click" ToolTip="Ayuda">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE897;" Style="{StaticResource SidebarIconStyle}"/>
@@ -1380,6 +1387,130 @@
                     </Grid>
                 </Border>
             </Grid>
+
+            <!-- ── CONFIGURACIÓN ──────────────────────────────────────────────── -->
+            <ScrollViewer x:Name="PageSettings" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
+                <StackPanel Margin="32,28,32,40" MaxWidth="720">
+
+                    <!-- Header -->
+                    <TextBlock Text="Configuración" FontFamily="{StaticResource FontTitle}"
+                               FontSize="28" FontWeight="Bold"
+                               Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                    <TextBlock Text="Personalizá el comportamiento de Focus Tracker."
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,32"/>
+
+                    <!-- ── 1. Carpeta de datos ─────────────────────────────────────────── -->
+                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="12" Padding="24,20" Margin="0,0,0,16">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                <TextBlock Text="&#xE8B7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="16" Foreground="{StaticResource AccentBrush}"
+                                           VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <TextBlock Text="Carpeta de datos" FontSize="15" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="Dónde se guarda la base de datos de tracking. Al cambiarla, los datos existentes se mueven automáticamente."
+                                       FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap" Margin="0,0,0,16" LineHeight="18"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Background="#0F0F15" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8" Padding="12,10">
+                                    <TextBlock x:Name="TxtDataFolder" Text="" FontSize="12"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                                               FontFamily="Consolas"/>
+                                </Border>
+                                <Button Grid.Column="1" x:Name="BtnBrowseFolder" Content="Cambiar carpeta"
+                                        Click="BtnBrowseFolder_Click" Style="{StaticResource OutlineButton}"
+                                        Padding="16,10" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ── 2. Sonido de notificaciones ────────────────────────────────── -->
+                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="12" Padding="24,20" Margin="0,0,0,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="&#xE767;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                               FontSize="16" Foreground="{StaticResource AccentBrush}"
+                                               VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Sonido de notificaciones" FontSize="15" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="Reproduce un sonido del sistema al aparecer cada notificación."
+                                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <!-- Toggle switch -->
+                            <ToggleButton x:Name="ToggleSound" Grid.Column="1" VerticalAlignment="Center"
+                                          Margin="16,0,0,0" Checked="ToggleSound_Changed" Unchecked="ToggleSound_Changed"
+                                          Style="{StaticResource ToggleSwitchStyle}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- ── 3. Detección de inactividad ────────────────────────────────── -->
+                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="12" Padding="24,20" Margin="0,0,0,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="&#xE81C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                               FontSize="16" Foreground="{StaticResource AccentBrush}"
+                                               VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Detener al detectar inactividad" FontSize="15" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="Si no hay input de teclado o mouse por más de 30 segundos, el tracking se detiene automáticamente."
+                                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <ToggleButton x:Name="ToggleIdle" Grid.Column="1" VerticalAlignment="Center"
+                                          Margin="16,0,0,0" Checked="ToggleIdle_Changed" Unchecked="ToggleIdle_Changed"
+                                          Style="{StaticResource ToggleSwitchStyle}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- ── 4. Restablecer datos ───────────────────────────────────────── -->
+                    <Border Background="#1A0808" BorderBrush="#3A1010"
+                            BorderThickness="1" CornerRadius="12" Padding="24,20" Margin="0,0,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                               FontSize="16" Foreground="{StaticResource DangerBrush}"
+                                               VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Eliminar todos los datos de tracking" FontSize="15" FontWeight="SemiBold"
+                                               Foreground="{StaticResource DangerBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="Borra permanentemente todas las sesiones, eventos y proyectos registrados. Esta acción no se puede deshacer."
+                                           FontSize="12" Foreground="#AA6666" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" x:Name="BtnResetData" Content="Restablecer todo"
+                                    Click="BtnResetData_Click" Style="{StaticResource DangerButton}"
+                                    Padding="16,10" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
 
             <!-- ── HELP ───────────────────────────────────────────────────────── -->
             <ScrollViewer x:Name="PageHelp" VerticalScrollBarVisibility="Auto"

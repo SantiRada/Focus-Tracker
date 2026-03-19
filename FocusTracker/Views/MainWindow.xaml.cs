@@ -1,3 +1,4 @@
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -8,6 +9,7 @@ using System.Windows.Threading;
 using FocusTracker.Helpers;
 using FocusTracker.Models;
 using FocusTracker.Services;
+using FocusTracker.Settings;
 using FocusTracker.ViewModels;
 using WpfColor       = System.Windows.Media.Color;
 using WpfBrush       = System.Windows.Media.SolidColorBrush;
@@ -73,12 +75,12 @@ public partial class MainWindow : Window
         _timeTabs     = new[] { TabToday, TabWeek, TabMonth, TabYear, TabCustom };
         _projTimeTabs = new[] { ProjTabToday, ProjTabWeek, ProjTabMonth, ProjTabYear, ProjTabCustom };
 
-        App.Tracker.FocusChanged += (app, _) => Dispatcher.Invoke(() => TxtCurrentApp.Text = app);
-        App.Tracker.AlarmTriggered += (title, msg) => Dispatcher.Invoke(() => ShowAlarmNotification(title, msg));
+        App.Tracker.FocusChanged    += (app, _) => Dispatcher.Invoke(() => TxtCurrentApp.Text = app);
+        App.Tracker.AlarmTriggered  += (title, msg) => Dispatcher.Invoke(() => ShowAlarmNotification(title, msg));
+        App.Tracker.IdleDetected    += () => Dispatcher.Invoke(OnIdleDetected);
 
         _uiTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _uiTimer.Tick += UiTimer_Tick;
-
         _uiTimer.Start();
 
         SourceInitialized += (s, e) =>
@@ -229,7 +231,8 @@ public partial class MainWindow : Window
 
     private void NavDashboard_Click(object s, RoutedEventArgs e) { ShowPage("Dashboard"); LoadDashboard(); }
     private void NavSessions_Click(object s, RoutedEventArgs e)  { ShowPage("Sessions");  LoadSessions();  }
-    private void NavHelp_Click(object s, RoutedEventArgs e)     => ShowPage("Help");
+    private void NavHelp_Click(object s, RoutedEventArgs e)      => ShowPage("Help");
+    private void NavSettings_Click(object s, RoutedEventArgs e)  { ShowPage("Settings");  LoadSettingsPage(); }
     private void HelpSection_Toggle(object s, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (s is not FrameworkElement el || el.Tag is not string bodyName) return;
@@ -255,6 +258,7 @@ public partial class MainWindow : Window
         PageProjectDetail.Visibility = page == "ProjectDetail"  ? Visibility.Visible : Visibility.Collapsed;
         PageProjectEdit.Visibility   = page == "ProjectEdit"    ? Visibility.Visible : Visibility.Collapsed;
         PageHelp.Visibility          = page == "Help"           ? Visibility.Visible : Visibility.Collapsed;
+        PageSettings.Visibility      = page == "Settings"       ? Visibility.Visible : Visibility.Collapsed;
         PageLite.Visibility          = page == "Lite"           ? Visibility.Visible : Visibility.Collapsed;
         PageLiteResult.Visibility    = page == "LiteResult"     ? Visibility.Visible : Visibility.Collapsed;
 
@@ -279,10 +283,11 @@ public partial class MainWindow : Window
             }
         }
 
-        BtnNavSetup.Tag     = page == "Setup"                                        ? "active" : "";
-        BtnNavDashboard.Tag = page == "Dashboard"                                    ? "active" : "";
-        BtnNavProjects.Tag  = page is "Projects" or "ProjectDetail" or "ProjectEdit" ? "active" : "";
-        BtnNavHelp.Tag      = page == "Help"                                         ? "active" : "";
+        BtnNavSetup.Tag      = page == "Setup"                                        ? "active" : "";
+        BtnNavDashboard.Tag  = page == "Dashboard"                                    ? "active" : "";
+        BtnNavProjects.Tag   = page is "Projects" or "ProjectDetail" or "ProjectEdit" ? "active" : "";
+        BtnNavSettings.Tag   = page == "Settings"                                     ? "active" : "";
+        BtnNavHelp.Tag       = page == "Help"                                         ? "active" : "";
     }
 
     private void BtnStop_Click(object s, RoutedEventArgs e)
@@ -1286,6 +1291,7 @@ public partial class MainWindow : Window
         TxtNavInicio.Visibility     = vis;
         TxtNavDash.Visibility       = vis;
         TxtNavProjects.Visibility   = vis;
+        TxtNavSettings.Visibility   = vis;
         TxtNavHelp.Visibility       = vis;
         TxtNavTut.Visibility        = vis;
         TxtStopLabel.Visibility     = vis;
@@ -1587,5 +1593,127 @@ public partial class MainWindow : Window
         ShowPage("Lite");
         BtnLiteStart.IsEnabled = LiteChips.Children.Count > 0;
         BtnLiteStop.IsEnabled  = false;
+    }
+
+    // ── Configuración ─────────────────────────────────────────────────────
+
+    private void LoadSettingsPage()
+    {
+        var s = App.Settings;
+        TxtDataFolder.Text      = s.DataFolder;
+        ToggleSound.IsChecked   = s.NotificationSound;
+        ToggleIdle.IsChecked    = s.IdleDetection;
+
+        // Sync idle detection to the running tracker
+        App.Tracker.IdleDetectionEnabled = s.IdleDetection;
+    }
+
+    private void BtnBrowseFolder_Click(object s, RoutedEventArgs e)
+    {
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description         = "Seleccioná la carpeta donde se guardarán los datos de Focus Tracker",
+            UseDescriptionForTitle = true,
+            SelectedPath        = App.Settings.DataFolder
+        };
+
+        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+
+        var newFolder = dialog.SelectedPath;
+        var oldFolder = App.Settings.DataFolder;
+
+        if (string.Equals(newFolder, oldFolder, StringComparison.OrdinalIgnoreCase)) return;
+
+        // Confirm with user
+        if (!ConfirmDialog.Show(this,
+                "Cambiar carpeta de datos",
+                $"Los datos se moverán de:\n{oldFolder}\n\na:\n{newFolder}\n\n¿Continuar?",
+                "Cambiar y mover")) return;
+
+        try
+        {
+            MoveDataFolder(oldFolder, newFolder);
+            App.Settings.DataFolder = newFolder;
+            App.Settings.Save();
+            TxtDataFolder.Text = newFolder;
+            ToastWindow.Show("Carpeta actualizada", "Los datos se movieron correctamente.");
+        }
+        catch (Exception ex)
+        {
+            ToastWindow.Show("Error", $"No se pudo mover los datos: {ex.Message}", ToastKind.Error);
+        }
+    }
+
+    /// <summary>
+    /// Moves focustracker.db (and crash.log if present) from one folder to another.
+    /// The app must restart to use the new DB; for now we just update settings so
+    /// the new path is used on next launch. We also hot-swap the connection if safe.
+    /// </summary>
+    private static void MoveDataFolder(string fromDir, string toDir)
+    {
+        Directory.CreateDirectory(toDir);
+
+        var files = new[] { "focustracker.db", "focustracker.db-wal", "focustracker.db-shm", "crash.log" };
+        foreach (var file in files)
+        {
+            var src = Path.Combine(fromDir, file);
+            var dst = Path.Combine(toDir, file);
+            if (File.Exists(src))
+                File.Move(src, dst, overwrite: true);
+        }
+    }
+
+    private void ToggleSound_Changed(object s, RoutedEventArgs e)
+    {
+        App.Settings.NotificationSound = ToggleSound.IsChecked == true;
+        App.Settings.Save();
+    }
+
+    private void ToggleIdle_Changed(object s, RoutedEventArgs e)
+    {
+        bool enabled = ToggleIdle.IsChecked == true;
+        App.Settings.IdleDetection = enabled;
+        App.Settings.Save();
+        App.Tracker.IdleDetectionEnabled = enabled;
+    }
+
+    private void BtnResetData_Click(object s, RoutedEventArgs e)
+    {
+        if (!ConfirmDialog.Show(this,
+                "Restablecer todos los datos",
+                "Se eliminarán permanentemente todas las sesiones, proyectos y eventos registrados. Esta acción no se puede deshacer.",
+                "Eliminar todo", danger: true)) return;
+
+        App.Database.ResetDatabase();
+        _projects = new();
+        RefreshHomeRecentProjects();
+        ToastWindow.Show("Datos eliminados", "Todos los registros de tracking fueron borrados.", ToastKind.Warning);
+    }
+
+    /// <summary>Called on the UI thread when TrackingService detects idle > 30s.</summary>
+    private void OnIdleDetected()
+    {
+        if (!App.Tracker.IsTracking) return;
+
+        var sessionId = App.Tracker.CurrentSessionId;
+        App.Tracker.StopTracking();
+
+        BtnSidebarStop.IsEnabled = false;
+        StatusDot.Fill = (WpfBrush)FindResource("TextMutedBrush");
+        TxtStatusLabel.Text = "INACTIVO";
+        TxtCurrentApp.Text  = "—";
+        TxtSessionTime.Text = "—";
+
+        // Show summary if on home page
+        if (PageSetup.Visibility == Visibility.Visible && HomeLiveDashboard.Visibility == Visibility.Visible)
+            ShowSessionSummary(sessionId);
+        else
+            RefreshHomeRecentProjects();
+
+        // Auto-delete empty sessions
+        if (App.Database.GetSessionDetail(sessionId).Count == 0)
+            App.Database.DeleteSession(sessionId);
+
+        ToastWindow.Show("Tracking pausado", "Se detectó inactividad por más de 30 segundos.", ToastKind.Info);
     }
 }

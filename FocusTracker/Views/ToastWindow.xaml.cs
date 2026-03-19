@@ -1,3 +1,4 @@
+using System.Media;
 using System.Windows;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
@@ -75,5 +76,15 @@ public partial class ToastWindow : Window
     {
         var toast = new ToastWindow(title, message, kind);
         toast.Show();
+
+        // Play system sound if enabled in settings
+        if (App.Settings.NotificationSound)
+        {
+            try
+            {
+                SystemSounds.Asterisk.Play();
+            }
+            catch { /* audio device may be unavailable */ }
+        }
     }
 }

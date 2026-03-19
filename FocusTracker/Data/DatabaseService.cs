@@ -10,9 +10,12 @@ public class DatabaseService : IDisposable
     private SqliteConnection? _connection;
     private readonly object _dbLock = new();
 
-    public DatabaseService()
+    /// <param name="dataFolder">Custom folder for the DB. Defaults to %APPDATA%\FocusTracker.</param>
+    public DatabaseService(string? dataFolder = null)
     {
-        var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FocusTracker");
+        var dir = string.IsNullOrWhiteSpace(dataFolder)
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FocusTracker")
+            : dataFolder;
         Directory.CreateDirectory(dir);
         _connectionString = $"Data Source={Path.Combine(dir, "focustracker.db")}";
         InitializeDatabase();
