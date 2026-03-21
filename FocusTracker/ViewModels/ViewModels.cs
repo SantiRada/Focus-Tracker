@@ -87,11 +87,12 @@ public class ProjectViewModel
 {
     public Project Raw { get; }
     public ProjectViewModel(Project p) => Raw = p;
-    public int    Id        => Raw.Id;
-    public string Name      => Raw.Name;
-    public int    ItemCount => Raw.TrackedKeys
+    public int    Id           => Raw.Id;
+    public string Name         => Raw.Name;
+    public int    ItemCount    => Raw.TrackedKeys
         .Split(',', StringSplitOptions.RemoveEmptyEntries)
         .Count(k => !k.StartsWith("[opt:"));
+    public bool   UsePomodoro  => Raw.UsePomodoro;
     // Set by LoadProjects so Comenzar is disabled during active tracking
     public bool CanStart { get; set; } = true;
 }

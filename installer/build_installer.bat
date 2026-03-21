@@ -45,7 +45,7 @@ if %errorlevel% neq 0 (
 echo.
 echo ============================================
 echo  Instalador creado: 
-echo  installer\FocusTracker_Setup_v1.4.exe
+echo  installer\FocusTracker_Setup_v1.5.1.exe
 echo ============================================
 echo.
 pause

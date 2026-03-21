@@ -36,11 +36,71 @@ public class TrackingService : IDisposable
     private HashSet<string> _runningProcessesCache = new(StringComparer.OrdinalIgnoreCase);
     private DateTime _lastRunningProcessRefresh = DateTime.MinValue;
 
+    // URLs that were actually focused during this session; used for reliable unfocus detection.
+    // (IsUrlInAnyWindowTitle is unreliable because Chrome titles show page titles, not domains.)
+    private readonly HashSet<string> _urlsEverFocused = new(StringComparer.OrdinalIgnoreCase);
+
+    // Last raw browser URL dispatched to plugins via FocusChanged (no DB recording).
+    // Kept separate from _curUrlHost so non-project URLs don't pollute project tracking.
+    private string? _rawBrowserFocusForPlugins;
+
+    // URL result cache — reused for up to 3 s when UIA fails intermittently,
+    // so brief read failures don't interrupt an active project URL tracking block.
+    private string?  _lastConfirmedBrowserUrl;
+    private uint     _lastConfirmedBrowserPid;
+    private DateTime _lastConfirmedBrowserTime = DateTime.MinValue;
+    private static readonly TimeSpan UrlCacheMaxAge = TimeSpan.FromSeconds(3);
+
     private record UnfocusState(string DisplayName, bool IsUrl, DateTime Start);
 
     public bool    IsTracking      => _isRunning;
     public int     CurrentSessionId => _currentSessionId;
     public string? CurrentFocusedApp => _curProcDisplay ?? _curUrlLabel;
+
+    // ── Pause / Resume ────────────────────────────────────────────────────
+    private volatile bool _isPaused = false;
+    /// <summary>True when tracking is running but temporarily paused (e.g. after idle detection).</summary>
+    public bool IsPaused => _isPaused;
+
+    /// <summary>
+    /// Flushes open focus/unfocus blocks to the DB and suspends ticking.
+    /// The session stays open — call ResumeTracking to continue.
+    /// </summary>
+    public void PauseTracking()
+    {
+        if (!_isRunning || _isPaused) return;
+        _isPaused = true;
+
+        var now = DateTime.Now;
+        // Flush focused block without closing it permanently
+        FlushFocus(now);
+
+        // Flush open unfocus blocks
+        foreach (var (key, state) in _unfocusStates)
+        {
+            var dur = now - state.Start;
+            if (dur.TotalSeconds >= 1)
+                _db.InsertFocusEvent(_currentSessionId, key, state.DisplayName,
+                    state.Start, now, state.IsUrl, isUnfocus: true);
+        }
+        _unfocusStates.Clear();
+
+        // Reset focus state so resume starts clean
+        _curProcName    = null;
+        _curProcDisplay = null;
+        _curUrlHost     = null;
+        _curUrlLabel    = null;
+    }
+
+    /// <summary>Resumes a paused session. No-op if not paused.</summary>
+    public void ResumeTracking()
+    {
+        if (!_isRunning || !_isPaused) return;
+        var now = DateTime.Now;
+        _procFocusStart = now;
+        _urlFocusStart  = now;
+        _isPaused = false;
+    }
 
     public int? SessionAlarmSeconds { get; set; }
     public int? TotalAlarmSeconds   { get; set; }
@@ -50,10 +110,12 @@ public class TrackingService : IDisposable
     private bool _totalAlarmTriggered;
 
     // ── Idle detection ────────────────────────────────────────────────────
-    private static readonly TimeSpan IdleThreshold = TimeSpan.FromSeconds(30);
-    /// <summary>When true, tracking will auto-stop if user idle exceeds 30 seconds.</summary>
+    /// <summary>Seconds of inactivity before auto-pause. Default 30.</summary>
+    public int  IdleTimeoutSeconds   { get; set; } = 30;
+    private TimeSpan IdleThreshold => TimeSpan.FromSeconds(IdleTimeoutSeconds);
+    /// <summary>When true, tracking will auto-pause if user idle exceeds IdleTimeoutSeconds.</summary>
     public bool IdleDetectionEnabled { get; set; }
-    /// <summary>Fired on the tracking thread when idle threshold is exceeded. UI should call StopTracking.</summary>
+    /// <summary>Fired on the tracking thread when idle threshold is exceeded. UI should call PauseTracking.</summary>
     public event Action? IdleDetected;
 
     public event Action<string, TimeSpan>? FocusChanged;
@@ -102,6 +164,11 @@ public class TrackingService : IDisposable
 
         _trackingUrls = _monitoredUrls.Count > 0;
         _unfocusStates.Clear();
+        _urlsEverFocused.Clear();
+        _rawBrowserFocusForPlugins  = null;
+        _lastConfirmedBrowserUrl    = null;
+        _lastConfirmedBrowserPid    = 0;
+        _lastConfirmedBrowserTime   = DateTime.MinValue;
 
         var allTracked = _monitoredProcesses.Keys
             .Concat(_monitoredUrls.Keys.Select(h => $"[{h}]"));
@@ -120,6 +187,7 @@ public class TrackingService : IDisposable
     {
         if (!_isRunning) return;
         _isRunning = false;
+        _isPaused  = false;
         var now = DateTime.Now;
 
         // Flush focused blocks
@@ -160,11 +228,19 @@ public class TrackingService : IDisposable
         {
             try
             {
-                // Idle detection — check before Tick so we stop cleanly
+                // While paused: keep the loop alive but skip all tracking logic
+                if (_isPaused)
+                {
+                    Thread.Sleep(500);
+                    continue;
+                }
+
+                // Idle detection — pause from within the loop so the thread stays alive
                 if (IdleDetectionEnabled && WinApi.GetIdleTime() >= IdleThreshold)
                 {
-                    IdleDetected?.Invoke();
-                    break; // exit loop; StopTracking will be called by the UI handler
+                    PauseTracking();        // flush open blocks and set _isPaused = true
+                    IdleDetected?.Invoke(); // notify UI (dispatched to UI thread)
+                    continue;              // stay in the while loop; _isPaused branch handles sleep
                 }
 
                 Tick();
@@ -219,7 +295,7 @@ public class TrackingService : IDisposable
 
     private void Tick()
     {
-        var (hwnd, pid, _) = WinApi.GetForegroundProcessInfo();
+        var (hwnd, pid, windowTitle) = WinApi.GetForegroundProcessInfo();
         var now = DateTime.Now;
 
         string? focusedProcName = null, focusedProcDisplay = null;
@@ -236,35 +312,131 @@ public class TrackingService : IDisposable
                 // We always identify the current process for Unfocus tracking
                 string? currentProcName = name;
 
-                // Prioritize URL matching if it's a browser
+                // ── Step 1: try to read the browser URL ───────────────────────────
+                // Always runs when a browser is focused, regardless of _trackingUrls.
                 string? focusedUrlHost = null, focusedUrlLabel = null;
-                if (_trackingUrls && isBrowser && hwnd != IntPtr.Zero)
+                string? rawBrowserHost = null;  // for plugin notification only (no DB)
+
+                if (isBrowser && hwnd != IntPtr.Zero)
                 {
                     var rawHost = UrlReaderService.ReadUrlFromBrowser(hwnd, name);
+
                     if (rawHost != null)
                     {
-                        foreach (var (host, info) in _monitoredUrls)
+                        // Successful read — update the cache
+                        _lastConfirmedBrowserUrl  = rawHost;
+                        _lastConfirmedBrowserPid  = pid;
+                        _lastConfirmedBrowserTime = now;
+
+                        rawBrowserHost = rawHost;
+
+                        // Match against project-monitored URLs → DB recording + label
+                        if (_trackingUrls)
                         {
-                            if (HostMatches(rawHost, host)) 
-                            { 
-                                focusedUrlHost = host; 
-                                focusedUrlLabel = info.Label; 
-                                break; 
+                            foreach (var (host, info) in _monitoredUrls)
+                            {
+                                if (HostMatches(rawHost, host))
+                                {
+                                    focusedUrlHost  = host;
+                                    focusedUrlLabel = info.Label;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // UIA read failed. Try the URL cache first — it covers brief
+                        // intermittent timeouts without interrupting an active tracking block.
+                        if (_lastConfirmedBrowserPid == pid &&
+                            now - _lastConfirmedBrowserTime <= UrlCacheMaxAge &&
+                            _lastConfirmedBrowserUrl != null)
+                        {
+                            rawBrowserHost = _lastConfirmedBrowserUrl;
+
+                            if (_trackingUrls)
+                            {
+                                foreach (var (host, info) in _monitoredUrls)
+                                {
+                                    if (HostMatches(_lastConfirmedBrowserUrl, host))
+                                    {
+                                        focusedUrlHost  = host;
+                                        focusedUrlLabel = info.Label;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        else if (!string.IsNullOrWhiteSpace(windowTitle))
+                        {
+                            // Cache expired or different window.
+                            // Fall back to window-title matching. Strategy:
+                            //   "YouTube - Google Chrome" → title contains "youtube"
+                            //   "Stack Overflow - Google Chrome" → title contains "stackoverflow"
+                            // We check each monitored URL's domain parts against the whole
+                            // title instead of trying to extract a single "site hint" first —
+                            // this handles multi-word site names and complex title formats.
+                            var titleLower = windowTitle.ToLowerInvariant();
+
+                            // Best-effort plugin notification hint (second-to-last segment).
+                            var tParts    = windowTitle.Split(new[] { " - " }, StringSplitOptions.RemoveEmptyEntries);
+                            var titleHint = tParts.Length >= 2
+                                ? tParts[^2].Trim().ToLowerInvariant()
+                                : tParts[0].Trim().ToLowerInvariant();
+                            if (!string.IsNullOrEmpty(titleHint))
+                                rawBrowserHost = titleHint;
+
+                            // Try to match a project URL against the window title.
+                            if (_trackingUrls)
+                            {
+                                foreach (var (host, info) in _monitoredUrls)
+                                {
+                                    // 1. Full host in title ("youtube.com" in "youtube.com - chrome")
+                                    if (titleLower.Contains(host.ToLowerInvariant()))
+                                    {
+                                        focusedUrlHost  = host;
+                                        focusedUrlLabel = info.Label;
+                                        break;
+                                    }
+
+                                    // 2. Any meaningful domain segment in title.
+                                    //    "youtube.com"      → test "youtube" (length ≥ 3)
+                                    //    "stackoverflow.com" → test "stackoverflow"
+                                    //    Skip short TLD parts like "com", "net", "co".
+                                    var hostParts = host.ToLowerInvariant().Split('.');
+                                    bool matched  = false;
+                                    foreach (var part in hostParts)
+                                    {
+                                        if (part.Length >= 4 && titleLower.Contains(part))
+                                        {
+                                            matched = true;
+                                            break;
+                                        }
+                                    }
+                                    if (matched)
+                                    {
+                                        focusedUrlHost  = host;
+                                        focusedUrlLabel = info.Label;
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
                 }
 
-                // If a URL is focused, we treat it as the primary focus
+                // ── Step 2: project-URL focus (recorded to DB) ────────────────────
                 if (focusedUrlHost != null)
                 {
                     HandleUrlFocusChange(focusedUrlHost, focusedUrlLabel, now);
-                    // Clear app focus to avoid double tracking
                     HandleAppFocusChange(null, null, now);
+                    // Project URL matched → plugins get the label via HandleUrlFocusChange above;
+                    // reset the raw-browser cache so it re-fires if the user later leaves the project URL.
+                    _rawBrowserFocusForPlugins = null;
                 }
                 else
                 {
-                    // No URL focused, check if the app itself is monitored
+                    // No project URL matched
                     if (_monitoredProcesses.TryGetValue(name, out var info))
                     {
                         focusedProcName    = name;
@@ -272,10 +444,21 @@ public class TrackingService : IDisposable
                     }
                     HandleAppFocusChange(focusedProcName, focusedProcDisplay, now);
                     HandleUrlFocusChange(null, null, now);
+
+                    // ── Step 3: plugin-only notification (no DB) ───────────────────
+                    // Fire FocusChanged with the raw browser URL so plugins like
+                    // UseLimitPlugin can detect websites that aren't in any project.
+                    if (!string.Equals(rawBrowserHost, _rawBrowserFocusForPlugins,
+                                       StringComparison.OrdinalIgnoreCase))
+                    {
+                        _rawBrowserFocusForPlugins = rawBrowserHost;
+                        if (rawBrowserHost != null)
+                            FocusChanged?.Invoke(rawBrowserHost, TimeSpan.Zero);
+                    }
                 }
 
-                // Unfocus tracking - pass the ACTUAL process name even if it's a browser with focused URL
-                // so the browser app doesn't count as "unfocused" while a URL is "focused"
+                // Unfocus tracking — pass the project URL host (not the raw host) so the
+                // string.Equals check inside HandleUnfocusTracking matches project keys.
                 HandleUnfocusTracking(currentProcName, focusedUrlHost, now);
             }
             catch { }
@@ -283,6 +466,7 @@ public class TrackingService : IDisposable
         else
         {
             // Nothing focused
+            _rawBrowserFocusForPlugins = null;
             HandleAppFocusChange(null, null, now);
             HandleUrlFocusChange(null, null, now);
             HandleUnfocusTracking(null, null, now);
@@ -361,17 +545,17 @@ public class TrackingService : IDisposable
         }
 
         // URLs — only relevant if a browser is open
+        // A URL is considered "still open" if it was visited during this session
+        // AND at least one browser process is currently running.
+        // (IsUrlInAnyWindowTitle is unreliable: Chrome titles show page titles, not domains.)
+        bool anyBrowserRunning = _runningProcessesCache.Any(p => UrlReaderService.IsBrowser(p));
+
         foreach (var (host, info) in _monitoredUrls)
         {
             if (!info.TrackUnfocus) continue;
-            bool isFocused  = string.Equals(host, focusedUrl, StringComparison.OrdinalIgnoreCase);
-            
-            // Refined URL "open" check:
-            // We only consider a URL "open" if it was VERY recently seen as focused
-            // or if we can find it in the window titles of the browser.
-            // This prevents "ghost" unfocus time when the URL isn't actually loaded in any tab.
-            bool isActuallyOpen = isFocused || IsUrlInAnyWindowTitle(host);
-            
+            bool isFocused      = string.Equals(host, focusedUrl, StringComparison.OrdinalIgnoreCase);
+            bool isActuallyOpen = isFocused || (_urlsEverFocused.Contains(host) && anyBrowserRunning);
+
             bool wasUnfocus = _unfocusStates.ContainsKey(host);
 
             if (isActuallyOpen && !isFocused)
@@ -444,7 +628,12 @@ public class TrackingService : IDisposable
         }
         _curUrlHost  = newHost;
         _curUrlLabel = newLabel;
-        if (newHost != null) { _urlFocusStart = now; FocusChanged?.Invoke(newLabel!, TimeSpan.Zero); }
+        if (newHost != null)
+        {
+            _urlsEverFocused.Add(newHost);  // remember for unfocus detection
+            _urlFocusStart = now;
+            FocusChanged?.Invoke(newLabel!, TimeSpan.Zero);
+        }
     }
 
     private void FlushFocus(DateTime now)
@@ -468,37 +657,41 @@ public class TrackingService : IDisposable
     private static bool HostMatches(string active, string tracked)
     {
         if (string.IsNullOrWhiteSpace(active) || string.IsNullOrWhiteSpace(tracked)) return false;
-        
-        active = active.ToLowerInvariant();
+
+        active  = active.ToLowerInvariant();
         tracked = tracked.ToLowerInvariant();
 
+        // Exact match
         if (active == tracked) return true;
 
-        // Check if tracked is a parent domain of active
-        // e.g. active="mail.google.com", tracked="google.com" -> true
-        // e.g. active="google.com.ar", tracked="google.com" -> true (if we want to allow regional)
-        // To be safe, we check if active ends with "." + tracked
+        // Subdomain match: active="mail.google.com", tracked="google.com" → true
         if (active.EndsWith("." + tracked)) return true;
 
-        // Special case for regional domains: if tracked is "google.com" and active is "google.com.ar"
-        // We can split and check if the main parts match.
-        // For now, let's keep it simple: if the tracked string is contained in the active string 
-        // AND it's surrounded by dots or at the start/end.
-        var parts = active.Split('.');
+        var activeParts  = active.Split('.');
         var trackedParts = tracked.Split('.');
-        
-        // If tracked has 2+ parts (like google.com), check if those parts appear consecutively in active
-        if (trackedParts.Length >= 2)
+
+        // Single-part tracked key (no TLD stored, e.g. user entered "youtube" not "youtube.com").
+        // Match if any label of the active host equals the tracked name.
+        // "youtube.com" vs "youtube" → activeParts contains "youtube" → true
+        // "mail.google.com" vs "google"  → activeParts contains "google"  → true
+        if (trackedParts.Length == 1)
+            return activeParts.Any(p => p == tracked);
+
+        // Single-part active (UIA returned a bare hostname) vs multi-part tracked.
+        // "youtube" vs "youtube.com" → tracked starts with "youtube." → true
+        if (activeParts.Length == 1)
+            return tracked.StartsWith(active + ".");
+
+        // Multi-part tracked key: check if tracked parts appear consecutively inside active.
+        // "google.com.ar" vs "google.com" → consecutive match → true
+        for (int i = 0; i <= activeParts.Length - trackedParts.Length; i++)
         {
-            for (int i = 0; i <= parts.Length - trackedParts.Length; i++)
+            bool match = true;
+            for (int j = 0; j < trackedParts.Length; j++)
             {
-                bool match = true;
-                for (int j = 0; j < trackedParts.Length; j++)
-                {
-                    if (parts[i + j] != trackedParts[j]) { match = false; break; }
-                }
-                if (match) return true;
+                if (activeParts[i + j] != trackedParts[j]) { match = false; break; }
             }
+            if (match) return true;
         }
 
         return false;

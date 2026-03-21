@@ -1,4 +1,4 @@
-Focus Tracker v1.4
+Focus Tracker v1.5.1
 Copyright (c) 2025 Tenzinn (Santiago Rada)
 
 Este software es de uso personal y libre redistribucion.

@@ -84,6 +84,7 @@ public class DatabaseService : IDisposable
         SafeAlter("FocusEvents",  "IsUnfocus", "INTEGER NOT NULL DEFAULT 0");
         SafeAlter("Projects",     "TotalTimeAlarmSeconds",   "INTEGER");
         SafeAlter("Projects",     "SessionTimeAlarmSeconds", "INTEGER");
+        SafeAlter("Projects",     "UsePomodoro",             "INTEGER NOT NULL DEFAULT 0");
     }
 
     private void SafeAlter(string table, string column, string definition)
@@ -116,17 +117,18 @@ public class DatabaseService : IDisposable
         {
             var conn = GetConnection();
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT Id, Name, TrackedKeys, TotalTimeAlarmSeconds, SessionTimeAlarmSeconds FROM Projects ORDER BY Name";
+            cmd.CommandText = "SELECT Id, Name, TrackedKeys, TotalTimeAlarmSeconds, SessionTimeAlarmSeconds, UsePomodoro FROM Projects ORDER BY Name";
             var list = new List<Project>();
             using var r = cmd.ExecuteReader();
             while (r.Read())
-                list.Add(new Project 
-                { 
-                    Id = r.GetInt32(0), 
-                    Name = r.GetString(1), 
+                list.Add(new Project
+                {
+                    Id = r.GetInt32(0),
+                    Name = r.GetString(1),
                     TrackedKeys = r.GetString(2),
-                    TotalTimeAlarmSeconds = r.IsDBNull(3) ? null : r.GetInt32(3),
-                    SessionTimeAlarmSeconds = r.IsDBNull(4) ? null : r.GetInt32(4)
+                    TotalTimeAlarmSeconds   = r.IsDBNull(3) ? null : r.GetInt32(3),
+                    SessionTimeAlarmSeconds = r.IsDBNull(4) ? null : r.GetInt32(4),
+                    UsePomodoro             = !r.IsDBNull(5) && r.GetInt32(5) != 0
                 });
             return list;
         }
@@ -171,6 +173,19 @@ public class DatabaseService : IDisposable
             using var cmd = conn.CreateCommand();
             // Unlink sessions from this project
             cmd.CommandText = "UPDATE Sessions SET ProjectId=NULL WHERE ProjectId=$id; DELETE FROM Projects WHERE Id=$id;";
+            cmd.Parameters.AddWithValue("$id", id);
+            cmd.ExecuteNonQuery();
+        }
+    }
+
+    public void SetProjectUsePomodoro(int id, bool value)
+    {
+        lock (_dbLock)
+        {
+            var conn = GetConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "UPDATE Projects SET UsePomodoro=$v WHERE Id=$id";
+            cmd.Parameters.AddWithValue("$v",  value ? 1 : 0);
             cmd.Parameters.AddWithValue("$id", id);
             cmd.ExecuteNonQuery();
         }

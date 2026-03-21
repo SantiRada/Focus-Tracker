@@ -1,0 +1,152 @@
+<Window x:Class="FocusTracker.Views.TrayPopup"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True"
+        SizeToContent="WidthAndHeight"
+        ResizeMode="NoResize">
+
+    <Window.Resources>
+        <!-- Row button style: flat, full-width, left-aligned text -->
+        <Style x:Key="PopupRowStyle" TargetType="Button">
+            <Setter Property="Background"           Value="Transparent"/>
+            <Setter Property="Foreground"           Value="#EEEEF2"/>
+            <Setter Property="FontSize"             Value="13"/>
+            <Setter Property="FontFamily"           Value="Segoe UI"/>
+            <Setter Property="Padding"              Value="14,9"/>
+            <Setter Property="HorizontalAlignment"  Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="BorderThickness"      Value="0"/>
+            <Setter Property="Cursor"               Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1C1C22"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#252530"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#44444F"/>
+                                <Setter Property="Cursor"     Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Accent (show window) button — lime highlight -->
+        <Style x:Key="PopupAccentRowStyle" TargetType="Button" BasedOn="{StaticResource PopupRowStyle}">
+            <Setter Property="Foreground"  Value="#C8FF00"/>
+            <Setter Property="FontWeight"  Value="SemiBold"/>
+        </Style>
+
+        <!-- Danger (stop) button — red -->
+        <Style x:Key="PopupDangerRowStyle" TargetType="Button" BasedOn="{StaticResource PopupRowStyle}">
+            <Setter Property="Foreground" Value="#FF4D6A"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1A0008"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#220010"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#44444F"/>
+                                <Setter Property="Cursor"     Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Thin separator -->
+        <Style x:Key="PopupSepStyle" TargetType="Separator">
+            <Setter Property="Background"       Value="#222228"/>
+            <Setter Property="Margin"           Value="10,3"/>
+            <Setter Property="Height"           Value="1"/>
+            <Setter Property="BorderThickness"  Value="0"/>
+        </Style>
+    </Window.Resources>
+
+    <!-- Outer border provides the dark card look + drop shadow -->
+    <Border Background="#0C0C0F"
+            BorderBrush="#2A2A35"
+            BorderThickness="1"
+            CornerRadius="10"
+            Padding="4"
+            MinWidth="230">
+        <Border.Effect>
+            <DropShadowEffect Color="#000000" BlurRadius="20" ShadowDepth="4" Opacity="0.6"/>
+        </Border.Effect>
+
+        <StackPanel x:Name="RootPanel">
+
+            <!-- ① Mostrar ventana -->
+            <Button x:Name="BtnShow"
+                    Style="{StaticResource PopupAccentRowStyle}"
+                    Click="BtnShow_Click">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="⬜  " FontSize="11" VerticalAlignment="Center" Opacity="0.7"/>
+                    <TextBlock Text="Mostrar ventana" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <Separator Style="{StaticResource PopupSepStyle}"/>
+
+            <!-- ② – ④  Project launch buttons (populated in code-behind) -->
+            <StackPanel x:Name="ProjectsPanel"/>
+
+            <Separator x:Name="SepAfterProjects" Style="{StaticResource PopupSepStyle}"/>
+
+            <!-- ⑤ Detener tracking -->
+            <Button x:Name="BtnStop"
+                    Style="{StaticResource PopupDangerRowStyle}"
+                    IsEnabled="False"
+                    Click="BtnStop_Click">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="⏹  " FontSize="11" VerticalAlignment="Center" Opacity="0.7"/>
+                    <TextBlock Text="Detener tracking" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <Separator Style="{StaticResource PopupSepStyle}"/>
+
+            <!-- ⑥ Salir -->
+            <Button x:Name="BtnExit"
+                    Style="{StaticResource PopupRowStyle}"
+                    Foreground="#7A7A92"
+                    Click="BtnExit_Click">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="✕  " FontSize="10" VerticalAlignment="Center" Opacity="0.6"/>
+                    <TextBlock Text="Salir" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+        </StackPanel>
+    </Border>
+</Window>

@@ -78,6 +78,13 @@
                         </StackPanel>
                     </Button>
 
+                    <Button x:Name="BtnNavPlugins" Style="{StaticResource SidebarButtonStyle}" Click="NavPlugins_Click" ToolTip="Plugins">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE756;" Style="{StaticResource SidebarIconStyle}"/>
+                            <TextBlock x:Name="TxtNavPlugins" Text="Plugins" Style="{StaticResource SidebarTextStyle}"/>
+                        </StackPanel>
+                    </Button>
+
                     <Border x:Name="NavDivider1" Height="1" Background="{StaticResource BorderBrush}" Margin="8,10,8,10"/>
 
                     <Button x:Name="BtnNavSettings" Style="{StaticResource SidebarButtonStyle}" Click="NavSettings_Click" ToolTip="Configuración">
@@ -89,22 +96,56 @@
 
                     <Button x:Name="BtnNavHelp" Style="{StaticResource SidebarButtonStyle}" Click="NavHelp_Click" ToolTip="Ayuda">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE897;" Style="{StaticResource SidebarIconStyle}"/>
-                            <TextBlock x:Name="TxtNavHelp" Text="Ayuda" Style="{StaticResource SidebarTextStyle}"/>
-                        </StackPanel>
-                    </Button>
-
-                    <Button x:Name="BtnOnboarding" Style="{StaticResource SidebarButtonStyle}" Click="ShowOnboarding_Click" ToolTip="Tutorial inicial">
-                        <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE946;" Style="{StaticResource SidebarIconStyle}"/>
-                            <TextBlock x:Name="TxtNavTut" Text="Tutorial" Style="{StaticResource SidebarTextStyle}"/>
+                            <TextBlock x:Name="TxtNavHelp" Text="Ayuda" Style="{StaticResource SidebarTextStyle}"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
 
-                <!-- Footer area / Stop button -->
+                <!-- Footer area / Update + Resume + Stop buttons -->
                 <StackPanel Grid.Row="3" Margin="10,0,10,20" VerticalAlignment="Bottom">
-                    <TextBlock x:Name="TxtAppVersion" FontSize="9" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                    <TextBlock x:Name="TxtAppVersion" FontSize="9" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                    <!-- Update button — only visible when a newer version is available -->
+                    <Button x:Name="BtnSidebarUpdate" Click="BtnSidebarUpdate_Click" Visibility="Collapsed"
+                            ToolTip="Actualización disponible" Margin="0,0,0,6"
+                            Cursor="Hand" HorizontalContentAlignment="Center">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="#142233"
+                                        BorderThickness="1"
+                                        CornerRadius="8" Padding="10,8">
+                                    <Border.BorderBrush>
+                                        <DrawingBrush TileMode="Tile" Viewport="0,0,10,1" ViewportUnits="Absolute">
+                                            <DrawingBrush.Drawing>
+                                                <GeometryDrawing Brush="#4DA6FF">
+                                                    <GeometryDrawing.Geometry>
+                                                        <RectangleGeometry Rect="0,0,6,1"/>
+                                                    </GeometryDrawing.Geometry>
+                                                </GeometryDrawing>
+                                            </DrawingBrush.Drawing>
+                                        </DrawingBrush>
+                                    </Border.BorderBrush>
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="&#xE777;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                       FontSize="13" Foreground="#4DA6FF"
+                                       VerticalAlignment="Center" Margin="0,0,7,0"/>
+                            <TextBlock x:Name="TxtUpdateLabel" Text="Actualizar" Foreground="#4DA6FF"
+                                       FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <!-- Resume button — only visible when session is paused by idle detection -->
+                    <Button x:Name="BtnSidebarResume" Click="BtnResume_Click" Visibility="Collapsed"
+                            Style="{StaticResource SidebarButtonStyle}" ToolTip="Reanudar tracking"
+                            Margin="0,0,0,6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE768;" Style="{StaticResource SidebarIconStyle}" Foreground="{StaticResource AccentBrush}"/>
+                            <TextBlock x:Name="TxtResumeLabel" Text="Reanudar tracking" Style="{StaticResource SidebarTextStyle}" Foreground="{StaticResource AccentBrush}"/>
+                        </StackPanel>
+                    </Button>
                     <Button x:Name="BtnSidebarStop" Click="BtnStop_Click" IsEnabled="False" Style="{StaticResource SidebarButtonStyle}" ToolTip="Detener tracking">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE71A;" Style="{StaticResource SidebarIconStyle}" Foreground="{StaticResource DangerBrush}"/>
@@ -197,7 +238,18 @@
                                     </StackPanel>
                                 </StackPanel>
                             </StackPanel>
-                            <Button Grid.Column="1" Content="■  Finalizar sesión" Style="{StaticResource DangerButton}" Padding="20,10" Click="BtnStop_Click"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Resume banner — visible only when paused by idle detection -->
+                            <Button x:Name="BtnLiveResume" Visibility="Collapsed"
+                                    Click="BtnResume_Click" Style="{StaticResource PrimaryButton}"
+                                    Padding="16,10" Margin="0,0,10,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE768;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Reanudar" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Content="■  Finalizar sesión" Style="{StaticResource DangerButton}" Padding="20,10" Click="BtnStop_Click"/>
+                        </StackPanel>
                         </Grid>
 
                         <UniformGrid Columns="2" Margin="0,0,0,24">
@@ -277,6 +329,12 @@
                             </StackPanel>
                         </Border>
                     </StackPanel>
+                    <!-- ── Plugin cards (contributed by plugins, home screen) ── -->
+                    <StackPanel x:Name="PluginHomeContainer" Margin="0,8,0,0"/>
+
+                    <!-- Plugin buttons near plugin cards (Home) -->
+                    <StackPanel x:Name="PluginBtnsHome" Orientation="Horizontal" Margin="0,8,0,0"/>
+
                 </StackPanel>
             </ScrollViewer>
 
@@ -298,7 +356,10 @@
                                 Padding="14,8" VerticalAlignment="Center"/>
                     </Grid>
                     <TextBlock Text="Analizá tus patrones de foco a lo largo del tiempo."
-                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,20"/>
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+
+                    <!-- Plugin buttons (Dashboard) -->
+                    <StackPanel x:Name="PluginBtnsDashboard" Orientation="Horizontal" Margin="0,0,0,12"/>
 
                     <!-- Time tabs -->
                     <Border Background="{StaticResource BgCardBrush}"
@@ -523,6 +584,9 @@
                                        FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"/>
                         </StackPanel>
                     </Grid>
+
+                    <!-- Plugin buttons (Sessions) -->
+                    <StackPanel x:Name="PluginBtnsSessions" Orientation="Horizontal" Margin="0,0,0,12"/>
 
                     <!-- Filters -->
                     <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16,12" Margin="0,0,0,16">
@@ -871,6 +935,9 @@
                                 Click="NewProject_Click" Padding="18,10" VerticalAlignment="Bottom"/>
                     </Grid>
 
+                    <!-- Plugin buttons (Projects) -->
+                    <StackPanel x:Name="PluginBtnsProjects" Orientation="Horizontal" Margin="0,0,0,12"/>
+
                     <!-- Project list -->
                     <ItemsControl x:Name="ProjectList">
                         <ItemsControl.ItemTemplate>
@@ -892,8 +959,6 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="8"/>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="8"/>
                                             <ColumnDefinition Width="Auto"/>
@@ -978,9 +1043,6 @@
                                             </Button.Style>
                                         </Button>
 
-                                        <TextBlock Grid.Column="5" Text="→" FontSize="16"
-                                                   Foreground="{StaticResource TextMutedBrush}"
-                                                   VerticalAlignment="Center"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -1398,11 +1460,132 @@
                                FontSize="28" FontWeight="Bold"
                                Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"/>
                     <TextBlock Text="Personalizá el comportamiento de Focus Tracker."
-                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,32"/>
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16"/>
 
-                    <!-- ── 1. Carpeta de datos ─────────────────────────────────────────── -->
+                    <!-- Settings tab bar (GENERAL + plugin tabs, built in code-behind) -->
+                    <StackPanel x:Name="SettingsTabBar" Orientation="Horizontal" Margin="0,0,0,0"/>
+
+                    <!-- Tab divider -->
+                    <Border Height="1" Background="{StaticResource BorderBrush}" Opacity="0.4"
+                            Margin="0,0,0,24"/>
+
+                    <!-- Native settings (shown when GENERAL tab is active) -->
+                    <StackPanel x:Name="SettingsGeneralContent">
+
+                    <!-- ══ SECCIÓN: NOTIFICACIONES Y SONIDO ══════════════════════════════ -->
+                    <TextBlock Text="NOTIFICACIONES Y SONIDO" FontSize="10" FontWeight="Bold"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,12"/>
+
+                    <!-- Sonido de notificaciones -->
                     <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="12" Padding="24,20" Margin="0,0,0,16">
+                            BorderThickness="1" CornerRadius="12" Padding="24,20" Margin="0,0,0,28">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="&#xE767;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                               FontSize="16" Foreground="{StaticResource AccentBrush}"
+                                               VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Sonido de notificaciones" FontSize="15" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="Reproduce un sonido del sistema al mostrar notificaciones de alarma, inactividad y eventos de plugins."
+                                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="18"/>
+                            </StackPanel>
+                            <ToggleButton x:Name="ToggleSound" Grid.Column="1" VerticalAlignment="Center"
+                                          Margin="16,0,0,0" Checked="ToggleSound_Changed" Unchecked="ToggleSound_Changed"
+                                          Style="{StaticResource ToggleSwitchStyle}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- ══ SECCIÓN: ACTUALIZACIONES ══════════════════════════════════════ -->
+                    <TextBlock Text="ACTUALIZACIONES" FontSize="10" FontWeight="Bold"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,12"/>
+
+                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="12" Padding="24,20" Margin="0,0,0,28">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="&#xE777;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                               FontSize="16" Foreground="{StaticResource AccentBrush}"
+                                               VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Actualizaciones automáticas" FontSize="15" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock Text="Cuando se detecte una nueva versión, FocusTracker se descargará e instalará automáticamente al arrancar, sin necesidad de confirmación."
+                                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="18"/>
+                            </StackPanel>
+                            <ToggleButton x:Name="ToggleAutoUpdate" Grid.Column="1" VerticalAlignment="Center"
+                                          Margin="16,0,0,0" Checked="ToggleAutoUpdate_Changed" Unchecked="ToggleAutoUpdate_Changed"
+                                          Style="{StaticResource ToggleSwitchStyle}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- ══ SECCIÓN: SEGUIMIENTO ══════════════════════════════════════════ -->
+                    <TextBlock Text="SEGUIMIENTO" FontSize="10" FontWeight="Bold"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,12"/>
+
+                    <!-- Detección de inactividad -->
+                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="12" Padding="24,20" Margin="0,0,0,28">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="&#xE81C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                               FontSize="16" Foreground="{StaticResource AccentBrush}"
+                                               VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Pausar al detectar inactividad" FontSize="15" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock x:Name="TxtIdleDescription"
+                                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
+                                           LineHeight="18" Margin="0,0,0,12"/>
+                                <!-- Timeout input row -->
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="Tiempo de espera:" FontSize="12"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <Border Background="{StaticResource BgInputBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                            BorderThickness="1" CornerRadius="6" Padding="8,4">
+                                        <TextBox x:Name="TxtIdleTimeout" Width="52" FontSize="13"
+                                                 Background="Transparent" BorderThickness="0"
+                                                 Foreground="{StaticResource TextPrimaryBrush}"
+                                                 CaretBrush="{StaticResource AccentBrush}"
+                                                 VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                 TextAlignment="Center" MaxLength="4"
+                                                 PreviewTextInput="NumericOnly_PreviewTextInput"
+                                                 TextChanged="TxtIdleTimeout_TextChanged"/>
+                                    </Border>
+                                    <TextBlock Text="segundos" FontSize="12"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <ToggleButton x:Name="ToggleIdle" Grid.Column="1" VerticalAlignment="Center"
+                                          Margin="16,0,0,0" Checked="ToggleIdle_Changed" Unchecked="ToggleIdle_Changed"
+                                          Style="{StaticResource ToggleSwitchStyle}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- ══ SECCIÓN: ALMACENAMIENTO ═══════════════════════════════════════ -->
+                    <TextBlock Text="ALMACENAMIENTO" FontSize="10" FontWeight="Bold"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,12"/>
+
+                    <!-- Carpeta de datos -->
+                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="12" Padding="24,20" Margin="0,0,0,28">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                                 <TextBlock Text="&#xE8B7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
@@ -1411,7 +1594,7 @@
                                 <TextBlock Text="Carpeta de datos" FontSize="15" FontWeight="SemiBold"
                                            Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
-                            <TextBlock Text="Dónde se guarda la base de datos de tracking. Al cambiarla, los datos existentes se mueven automáticamente."
+                            <TextBlock Text="Ubicación de la base de datos de tracking. Al cambiarla, los datos existentes se mueven automáticamente."
                                        FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
                                        TextWrapping="Wrap" Margin="0,0,0,16" LineHeight="18"/>
                             <Grid>
@@ -1433,58 +1616,11 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- ── 2. Sonido de notificaciones ────────────────────────────────── -->
-                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="12" Padding="24,20" Margin="0,0,0,16">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                    <TextBlock Text="&#xE767;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                               FontSize="16" Foreground="{StaticResource AccentBrush}"
-                                               VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                    <TextBlock Text="Sonido de notificaciones" FontSize="15" FontWeight="SemiBold"
-                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <TextBlock Text="Reproduce un sonido del sistema al aparecer cada notificación."
-                                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
-                            </StackPanel>
-                            <!-- Toggle switch -->
-                            <ToggleButton x:Name="ToggleSound" Grid.Column="1" VerticalAlignment="Center"
-                                          Margin="16,0,0,0" Checked="ToggleSound_Changed" Unchecked="ToggleSound_Changed"
-                                          Style="{StaticResource ToggleSwitchStyle}"/>
-                        </Grid>
-                    </Border>
+                    <!-- ══ SECCIÓN: ZONA DE PELIGRO ══════════════════════════════════════ -->
+                    <TextBlock Text="ZONA DE PELIGRO" FontSize="10" FontWeight="Bold"
+                               Foreground="{StaticResource DangerBrush}" Margin="0,0,0,12"/>
 
-                    <!-- ── 3. Detección de inactividad ────────────────────────────────── -->
-                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="12" Padding="24,20" Margin="0,0,0,16">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                    <TextBlock Text="&#xE81C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                               FontSize="16" Foreground="{StaticResource AccentBrush}"
-                                               VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                    <TextBlock Text="Detener al detectar inactividad" FontSize="15" FontWeight="SemiBold"
-                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <TextBlock Text="Si no hay input de teclado o mouse por más de 30 segundos, el tracking se detiene automáticamente."
-                                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
-                            </StackPanel>
-                            <ToggleButton x:Name="ToggleIdle" Grid.Column="1" VerticalAlignment="Center"
-                                          Margin="16,0,0,0" Checked="ToggleIdle_Changed" Unchecked="ToggleIdle_Changed"
-                                          Style="{StaticResource ToggleSwitchStyle}"/>
-                        </Grid>
-                    </Border>
-
-                    <!-- ── 4. Restablecer datos ───────────────────────────────────────── -->
+                    <!-- Eliminar todos los datos -->
                     <Border Background="#1A0808" BorderBrush="#3A1010"
                             BorderThickness="1" CornerRadius="12" Padding="24,20" Margin="0,0,0,0">
                         <Grid>
@@ -1501,13 +1637,274 @@
                                                Foreground="{StaticResource DangerBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <TextBlock Text="Borra permanentemente todas las sesiones, eventos y proyectos registrados. Esta acción no se puede deshacer."
-                                           FontSize="12" Foreground="#AA6666" TextWrapping="Wrap"/>
+                                           FontSize="12" Foreground="#AA6666" TextWrapping="Wrap" LineHeight="18"/>
                             </StackPanel>
                             <Button Grid.Column="1" x:Name="BtnResetData" Content="Restablecer todo"
                                     Click="BtnResetData_Click" Style="{StaticResource DangerButton}"
                                     Padding="16,10" Margin="16,0,0,0" VerticalAlignment="Center"/>
                         </Grid>
                     </Border>
+
+                    </StackPanel><!-- end SettingsGeneralContent -->
+
+                    <!-- Plugin settings (shown when a plugin tab is active) -->
+                    <StackPanel x:Name="PluginSettingsContainer" Margin="0,0,0,0"/>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ── PLUGINS ─────────────────────────────────────────────────────── -->
+            <ScrollViewer x:Name="PagePlugins" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
+                <StackPanel Margin="32,28,32,40" MaxWidth="720">
+
+                    <!-- ══ HEADER: title + Importar + Mis plugins ══ -->
+                    <Grid Margin="0,0,0,24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Plugins" FontFamily="{StaticResource FontTitle}"
+                                   FontSize="28" FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <!-- Importar — temporal para testing -->
+                        <Button x:Name="BtnImportPlugin" Grid.Column="1"
+                                Click="BtnImportPlugin_Click"
+                                Style="{StaticResource OutlineButton}" Padding="14,9" Margin="0,0,10,0"
+                                VerticalAlignment="Center" ToolTip="Instalar un .focusplugin local (testing)">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE898;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="13" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Importar" FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <!-- Mis plugins -->
+                        <Button x:Name="BtnMyPlugins" Grid.Column="2"
+                                Click="BtnMyPlugins_Click"
+                                Style="{StaticResource OutlineButton}" Padding="14,9"
+                                VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE74C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="13" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Mis plugins" FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <!-- ══ STORE PANEL (shown by default) ══ -->
+                    <StackPanel x:Name="PluginStorePanel">
+
+                        <!-- Search + filter area -->
+                        <StackPanel Margin="0,0,0,20">
+
+                            <!-- Row 1: search box + pricing combo -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Border Background="{StaticResource BgInputBrush}"
+                                        BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="8"
+                                        Padding="12,0" Margin="0,0,10,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                   FontSize="13" Foreground="{StaticResource TextMutedBrush}"
+                                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBox x:Name="TxtPluginSearch" Grid.Column="1"
+                                                 Height="38" BorderThickness="0"
+                                                 Background="Transparent"
+                                                 Foreground="{StaticResource TextPrimaryBrush}"
+                                                 CaretBrush="{StaticResource TextPrimaryBrush}"
+                                                 FontSize="13" VerticalContentAlignment="Center"
+                                                 TextChanged="TxtPluginSearch_TextChanged">
+                                            <TextBox.Style>
+                                                <Style TargetType="TextBox">
+                                                    <Style.Resources>
+                                                        <Style TargetType="ScrollViewer">
+                                                            <Setter Property="OverridesDefaultStyle" Value="True"/>
+                                                        </Style>
+                                                    </Style.Resources>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="TextBox">
+                                                                <Grid>
+                                                                    <TextBlock x:Name="Placeholder"
+                                                                               Text="Buscar plugins..."
+                                                                               Foreground="{StaticResource TextMutedBrush}"
+                                                                               FontSize="13" VerticalAlignment="Center"
+                                                                               IsHitTestVisible="False"
+                                                                               Visibility="Collapsed"/>
+                                                                    <ScrollViewer x:Name="PART_ContentHost"
+                                                                                  VerticalAlignment="Center"/>
+                                                                </Grid>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="Text" Value="">
+                                                                        <Setter TargetName="Placeholder" Property="Visibility" Value="Visible"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </TextBox.Style>
+                                        </TextBox>
+                                    </Grid>
+                                </Border>
+
+                                <ComboBox x:Name="CmbPluginFilter" Grid.Column="1"
+                                          Style="{StaticResource PluginComboBoxStyle}"
+                                          Width="165"
+                                          SelectionChanged="CmbPluginFilter_SelectionChanged">
+                                    <ComboBoxItem Content="Todos los tipos" Tag="all" IsSelected="True"/>
+                                    <ComboBoxItem Content="Gratis"          Tag="free"/>
+                                    <ComboBoxItem Content="Donación"        Tag="donation"/>
+                                    <ComboBoxItem Content="Compra única"    Tag="paid"/>
+                                    <ComboBoxItem Content="Suscripción"     Tag="subscription"/>
+                                </ComboBox>
+                            </Grid>
+
+                            <!-- Row 2: show-installed switch — pequeño, pegado al buscador -->
+                            <StackPanel Orientation="Horizontal" Margin="2,0,0,0">
+                                <ToggleButton x:Name="ChkShowInstalled"
+                                              Style="{StaticResource ToggleSwitchStyle}"
+                                              VerticalAlignment="Center"
+                                              Checked="ChkShowInstalled_Changed"
+                                              Unchecked="ChkShowInstalled_Changed"/>
+                                <TextBlock Text="Ver plugins ya instalados"
+                                           FontSize="11"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           VerticalAlignment="Center"
+                                           Margin="8,0,0,0"/>
+                            </StackPanel>
+
+                        </StackPanel>
+
+                        <!-- Store listings (populated from API) -->
+                        <StackPanel x:Name="PluginRecommendedPanel">
+                            <TextBlock x:Name="TxtStoreSection" Text="TODOS LOS PLUGINS"
+                                       FontSize="10" FontWeight="Bold"
+                                       Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,14"/>
+                            <TextBlock x:Name="TxtStoreLoading" Text="Cargando plugins..."
+                                       FontSize="13" Foreground="{StaticResource TextMutedBrush}"
+                                       HorizontalAlignment="Center" Margin="0,16,0,20"/>
+                            <TextBlock x:Name="TxtStoreError" Visibility="Collapsed"
+                                       FontSize="12" Foreground="#FF8A9A"
+                                       TextWrapping="Wrap" Margin="0,0,0,12"/>
+                            <StackPanel x:Name="PluginApiListPanel"/>
+                        </StackPanel>
+
+                        <!-- Search results (shown when TxtPluginSearch has text) -->
+                        <StackPanel x:Name="PluginSearchResultsPanel" Visibility="Collapsed">
+                            <TextBlock x:Name="TxtSearchResultsLabel"
+                                       FontSize="10" FontWeight="Bold"
+                                       Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,14"/>
+                            <StackPanel x:Name="PluginSearchResultsList"/>
+                            <TextBlock x:Name="TxtSearchNoResults"
+                                       Text="No se encontraron plugins instalados que coincidan con la búsqueda."
+                                       FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap" Visibility="Collapsed" Margin="0,0,0,8"/>
+                        </StackPanel>
+
+                    </StackPanel><!-- /PluginStorePanel -->
+
+                    <!-- ══ MY PLUGINS PANEL (hidden by default) ══ -->
+                    <StackPanel x:Name="PluginMyPluginsPanel" Visibility="Collapsed">
+
+                        <!-- Sub-header: back + title -->
+                        <Grid Margin="0,0,0,22">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Click="BtnBackToStore_Click"
+                                    Style="{StaticResource OutlineButton}"
+                                    Padding="10,9" Margin="0,0,14,0"
+                                    VerticalAlignment="Center" ToolTip="Volver a la tienda">
+                                <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="13"/>
+                            </Button>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Mis plugins" FontSize="20" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <TextBlock Text="Plugins instalados en este dispositivo"
+                                           FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock x:Name="TxtNoMyPlugins"
+                                   Text="No hay plugins instalados. Usá el botón Importar para cargar un archivo .focusplugin."
+                                   FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" Visibility="Visible" Margin="0,0,0,8"/>
+
+                        <!-- Plugin cards populated from code-behind -->
+                        <StackPanel x:Name="MyPluginsListPanel"/>
+
+                    </StackPanel><!-- /PluginMyPluginsPanel -->
+
+                    <!-- ══ PLUGIN HELP PANEL (hidden by default) ══ -->
+                    <StackPanel x:Name="PluginHelpPanel" Visibility="Collapsed">
+
+                        <!-- Sub-header: back + plugin name -->
+                        <Grid Margin="0,0,0,22">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Click="BtnBackToMyPlugins_Click"
+                                    Style="{StaticResource OutlineButton}"
+                                    Padding="10,9" Margin="0,0,14,0"
+                                    VerticalAlignment="Center" ToolTip="Volver a Mis plugins">
+                                <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="13"/>
+                            </Button>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtHelpPluginName" FontSize="20" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <TextBlock Text="Ayuda del plugin"
+                                           FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Help content rendered from code-behind -->
+                        <StackPanel x:Name="PluginHelpContentPanel"/>
+
+                    </StackPanel><!-- /PluginHelpPanel -->
+
+                    <!-- ══ PLUGIN DETAIL PANEL ══ -->
+                    <StackPanel x:Name="PluginDetailPanel" Visibility="Collapsed">
+
+                        <!-- Back + header -->
+                        <Grid Margin="0,0,0,22">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Click="BtnDetailBack_Click"
+                                    Style="{StaticResource OutlineButton}"
+                                    Padding="10,9" Margin="0,0,14,0"
+                                    VerticalAlignment="Center" ToolTip="Volver a la tienda">
+                                <TextBlock Text="&#xE72B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="13"/>
+                            </Button>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtPluginDetailName" FontSize="20" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <TextBlock x:Name="TxtPluginDetailSubtitle" FontSize="12"
+                                           Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Detail content (built from code-behind) -->
+                        <StackPanel x:Name="PluginDetailContentPanel"/>
+
+                    </StackPanel><!-- /PluginDetailPanel -->
 
                 </StackPanel>
             </ScrollViewer>
@@ -1516,366 +1913,265 @@
             <ScrollViewer x:Name="PageHelp" VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
                 <StackPanel Margin="32,28,32,40">
-                    <Grid Margin="0,0,0,4">
+
+                    <!-- Header -->
+                    <Grid Margin="0,0,0,28">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Ayuda" FontFamily="{StaticResource FontTitle}"
-                                   FontSize="24" FontWeight="Bold"
-                                   Foreground="{StaticResource TextPrimaryBrush}"/>
-                        <Button Grid.Column="1" Content="▶  Guía rápida"
-                                Style="{StaticResource OutlineButton}"
-                                Click="ShowOnboarding_Click"
-                                Padding="14,8" VerticalAlignment="Center"/>
+                        <StackPanel>
+                            <TextBlock Text="Ayuda" FontFamily="{StaticResource FontTitle}"
+                                       FontSize="28" FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="Conocé todo lo que podés hacer con Focus Tracker."
+                                       FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Click="ShowOnboarding_Click"
+                                Style="{StaticResource OutlineButton}" Padding="14,8" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE946;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Guía rápida" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                     </Grid>
-                    <TextBlock Text="Tocá el título de cada sección para expandirla o colapsarla."
-                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,24"/>
 
+                    <!-- ── SECCIÓN: Funciones principales ── -->
+                    <TextBlock Text="FUNCIONES PRINCIPALES" FontSize="9" FontWeight="Bold"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,14"/>
 
+                    <UniformGrid Columns="2" Margin="0,0,0,28">
 
-                    <!-- Dashboard -->
-                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="10" Padding="24,20" Margin="0,0,0,12">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14" Cursor="Hand"
-                                          Tag="HelpBody_Dashboard" MouseLeftButtonUp="HelpSection_Toggle">
-                                <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600"
-                                        BorderThickness="1" CornerRadius="8" Width="36" Height="36" Margin="0,0,12,0">
-                                    <TextBlock Text="◈" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource AccentBrush}"/>
-                                </Border>
-                                <TextBlock Text="Dashboard" FontFamily="{StaticResource FontTitle}"
-                                           FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <StackPanel x:Name="HelpBody_Dashboard">
-                            <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="22" Margin="0,0,0,16">
-                                Tu vista principal de estadísticas. Muestra cuánto tiempo pasaste en cada app o sitio web, con filtros de tiempo.
-                            </TextBlock>
-                            <UniformGrid Columns="3" Margin="0,0,0,16">
-                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,4,0">
-                                    <StackPanel>
-                                        <TextBlock Text="Filtros de tiempo" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5"/>
-                                        <TextBlock Text="Cambiá entre Hoy, Semana, Mes, Año, o un rango personalizado con fechas." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="18"/>
-                                    </StackPanel>
-                                </Border>
-                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4,0,4,0">
-                                    <StackPanel>
-                                        <TextBlock Text="Top 3" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5"/>
-                                        <TextBlock Text="Las tres apps con más tiempo aparecen destacadas arriba para verlas rápido." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="18"/>
-                                    </StackPanel>
-                                </Border>
-                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4,0,0,0">
-                                    <StackPanel>
-                                        <TextBlock Text="Focus vs Unfocus" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5"/>
-                                        <TextBlock Text="Cada fila muestra el tiempo activo (verde), el tiempo en segundo plano (naranja) y el total." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="18"/>
-                                    </StackPanel>
-                                </Border>
-                            </UniformGrid>
-                            <!-- Example table -->
-                            <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                    BorderThickness="1" CornerRadius="8" Padding="14,12">
-                                <StackPanel>
-                                    <TextBlock Text="EJEMPLO — cómo se ven los datos" FontSize="9" FontWeight="Bold"
-                                               Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,10"/>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="2*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="App/URL" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
-                                        <TextBlock Grid.Column="1" Text="Focus" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
-                                        <TextBlock Grid.Column="2" Text="Unfocus" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
-                                        <TextBlock Grid.Column="3" Text="Total" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
-                                    </Grid>
-                                    <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,6,0,8"/>
-                                    <Grid Margin="0,0,0,6">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="2*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="● Figma" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                        <TextBlock Grid.Column="1" Text="2h 10m" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"/>
-                                        <TextBlock Grid.Column="2" Text="—" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
-                                        <TextBlock Grid.Column="3" Text="2h 10m" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                        <Border Grid.Column="4" Background="#1A2200" BorderBrush="#4A6600" BorderThickness="1" CornerRadius="4" Padding="5,2" VerticalAlignment="Center">
-                                            <TextBlock Text="APP" FontSize="8" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"/>
-                                        </Border>
-                                    </Grid>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="2*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="● youtube.com" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                        <TextBlock Grid.Column="1" Text="0h 45m" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"/>
-                                        <TextBlock Grid.Column="2" Text="1h 20m" FontSize="12" FontWeight="SemiBold" Foreground="#FFAA44"/>
-                                        <TextBlock Grid.Column="3" Text="2h 05m" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                        <Border Grid.Column="4" Background="#0D1A2E" BorderBrush="#2A4A88" BorderThickness="1" CornerRadius="4" Padding="5,2" VerticalAlignment="Center">
-                                            <TextBlock Text="URL" FontSize="8" FontWeight="Bold" Foreground="#60AAFF"/>
-                                        </Border>
-                                    </Grid>
+                        <!-- Tracking -->
+                        <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,0,8,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600"
+                                            BorderThickness="1" CornerRadius="8" Width="38" Height="38" Margin="0,0,12,0">
+                                        <TextBlock Text="&#xF5B0;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                   FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="{StaticResource AccentBrush}"/>
+                                    </Border>
+                                    <TextBlock Text="Tracking en vivo" FontSize="15" FontWeight="Bold"
+                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
-                            </Border>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Sesiones -->
-                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="10" Padding="24,20" Margin="0,0,0,12">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14" Cursor="Hand"
-                                          Tag="HelpBody_Sesiones" MouseLeftButtonUp="HelpSection_Toggle">
-                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="8" Width="36" Height="36" Margin="0,0,12,0">
-                                    <TextBlock Text="≡" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                </Border>
-                                <TextBlock Text="Sesiones" FontFamily="{StaticResource FontTitle}"
-                                           FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <StackPanel x:Name="HelpBody_Sesiones">
-                            <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="22" Margin="0,0,0,16">
-                                Cada vez que presón "Iniciar tracking" se crea una sesión. Se guardan automáticamente para que puedas ver tu historial.
-                            </TextBlock>
-                            <UniformGrid Columns="2" Margin="0,0,0,16">
-                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="0,0,6,0">
-                                    <StackPanel>
-                                        <TextBlock Text="🏷  Nombre de sesión" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"/>
-                                        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="19">
-                                            Podés ponerle un nombre antes de iniciar, como "Diseño logo cliente". Si no le ponés nombre se guarda como "Sesión #1", etc. También podés renombrarla después desde el detalle.
-                                        </TextBlock>
-                                    </StackPanel>
-                                </Border>
-                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="6,0,0,0">
-                                    <StackPanel>
-                                        <TextBlock Text="📂  Asignar a proyecto" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"/>
-                                        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="19">
-                                            Desde el detalle de una sesión podés elegir a qué proyecto pertenece. Eso hace que esa sesión cuente en las estadísticas de ese proyecto.
-                                        </TextBlock>
-                                    </StackPanel>
-                                </Border>
-                            </UniformGrid>
-                            <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                    BorderThickness="1" CornerRadius="8" Padding="14,12">
                                 <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="19">
-                                    <Run FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}">¿dónde se guardan los datos?</Run>
-                                    <Run> Todo se guarda en tu computadora, en </Run>
-                                    <Run FontFamily="Consolas" Foreground="{StaticResource AccentBrush}">%APPDATA%\FocusTracker</Run>
-                                    <Run>. No se envía nada a internet. Si desinstalás la app, los datos quedan — podés borrarlos manualmente si querés.</Run>
+                                    Seleccioná apps o URLs, dale nombre a la sesión y presioná Iniciar. Focus Tracker registra en tiempo real cuánto estás enfocado (Focus) y cuánto esa app está en segundo plano (Unfocus).
                                 </TextBlock>
-                            </Border>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Proyectos -->
-                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="10" Padding="24,20" Margin="0,0,0,12">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14" Cursor="Hand"
-                                          Tag="HelpBody_Proyectos" MouseLeftButtonUp="HelpSection_Toggle">
                                 <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="8" Width="36" Height="36" Margin="0,0,12,0">
-                                    <TextBlock Text="◻" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                </Border>
-                                <TextBlock Text="Proyectos" FontFamily="{StaticResource FontTitle}"
-                                           FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <StackPanel x:Name="HelpBody_Proyectos">
-                            <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="22" Margin="0,0,0,16">
-                                Los proyectos sirven para agrupar trabajo relacionado. Creá un proyecto "Rediseño web", asignále Figma y VS Code, y después podés ver cuánto tiempo total le dedicaste.
-                            </TextBlock>
-                            <UniformGrid Columns="3" Margin="0,0,0,16">
-                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,4,0">
+                                        BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,10,0,0">
                                     <StackPanel>
-                                        <TextBlock Text="➕  Crear" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5"/>
-                                        <TextBlock Text="Tocá &quot;+ Nuevo proyecto&quot;, ponerle un nombre y agregar las apps y webs que forman parte." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="18"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                            <Ellipse Width="8" Height="8" Fill="{StaticResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBlock Text="Focus  = App en pantalla activa" FontSize="11" Foreground="{StaticResource AccentBrush}"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="8" Height="8" Fill="#FFAA44" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBlock Text="Unfocus = App abierta pero no activa" FontSize="11" Foreground="#FFAA44"/>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
-                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4,0,4,0">
-                                    <StackPanel>
-                                        <TextBlock Text="✎  Editar" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5"/>
-                                        <TextBlock Text="Tocá el ícono de lápiz en el listado, o el botón &quot;Editar&quot; dentro del detalle del proyecto." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="18"/>
-                                    </StackPanel>
-                                </Border>
-                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="4,0,0,0">
-                                    <StackPanel>
-                                        <TextBlock Text="▶  Comenzar" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,5"/>
-                                        <TextBlock Text="Cada proyecto tiene un botón &quot;Comenzar&quot; que inicia una sesión con sus apps ya cargadas, lista para trackear." FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="18"/>
-                                    </StackPanel>
-                                </Border>
-                            </UniformGrid>
-                            <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600"
-                                    BorderThickness="1" CornerRadius="8" Padding="14,12">
-                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource AccentBrush}" LineHeight="19">
-                                    <Run FontWeight="Bold">Tip:</Run>
-                                    <Run>Si en una sesión trackés apps que no forman parte del proyecto, aparecen en "Apps extras" para no confundirlas con las del proyecto.</Run>
-                                </TextBlock>
-                            </Border>
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </Border>
 
-                    <!-- System tray -->
-                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="10" Padding="24,20" Margin="0,0,0,12">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14" Cursor="Hand"
-                                          Tag="HelpBody_Tray" MouseLeftButtonUp="HelpSection_Toggle">
-                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="8" Width="36" Height="36" Margin="0,0,12,0">
-                                    <TextBlock Text="🔔" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                                <TextBlock Text="Ícono en la barra del sistema" FontFamily="{StaticResource FontTitle}"
-                                           FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <StackPanel x:Name="HelpBody_Tray">
-                            <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="22">
-                                Cuando cerrás la ventana con la X, la app no se cierra — sigue midiendo en segundo plano y aparece como un ícono cerca del reloj. Dobìl click para volver a abrirla. Click derecho te da opciones rápidas: mostrar la ventana, detener el tracking o cerrar del todo.
-                            </TextBlock>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Modo Lite -->
-                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="10" Padding="24,20">
-                        <StackPanel>
-                            <!-- Clickable header -->
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14" Cursor="Hand"
-                                        Tag="HelpBody_Lite" MouseLeftButtonUp="HelpSection_Toggle">
-                                <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600"
-                                        BorderThickness="1" CornerRadius="8" Width="36" Height="36" Margin="0,0,12,0">
-                                    <TextBlock Text="⚡" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                                <StackPanel VerticalAlignment="Center">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600" BorderThickness="1"
-                                                CornerRadius="4" Padding="6,2" Margin="0,0,8,0" VerticalAlignment="Center">
-                                            <TextBlock Text="LITE" FontSize="9" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"/>
-                                        </Border>
-                                        <TextBlock Text="Modo Lite" FontFamily="{StaticResource FontTitle}"
-                                                   FontSize="18" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                    </StackPanel>
-                                    <TextBlock Text="Tracking rápido sin historial permanente"
-                                               FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                        <!-- Proyectos -->
+                        <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="12" Padding="20" Margin="8,0,0,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                            BorderThickness="1" CornerRadius="8" Width="38" Height="38" Margin="0,0,12,0">
+                                        <TextBlock Text="&#xE8B7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                   FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    </Border>
+                                    <TextBlock Text="Proyectos" FontSize="15" FontWeight="Bold"
+                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
-                            </StackPanel>
-
-                            <!-- Collapsible body -->
-                            <StackPanel x:Name="HelpBody_Lite">
-                                <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="22" Margin="0,0,0,16">
-                                    El Modo Lite simplifica la app a lo esencial: buscás, seleccionás, medís. Sin proyectos, sin historial permanente, sin configuración. Ideal para una reunión, una tarea puntual o cualquier cosa que querés medir una sola vez.
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="19">
+                                    Agrupá sesiones por objetivo. Creá un proyecto "Diseño web", asignale Figma y VS Code, y mirá cuántas horas totales le dedicaste a lo largo del tiempo.
                                 </TextBlock>
-
-                                <!-- Step-by-step flow -->
                                 <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,12">
+                                        BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,10,0,0">
                                     <StackPanel>
-                                        <TextBlock Text="CÓMO USARLO" FontSize="9" FontWeight="Bold"
-                                                   Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,12"/>
-                                        <Grid Margin="0,0,0,10">
-                                            <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                            <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600" BorderThickness="1"
-                                                    CornerRadius="14" Width="24" Height="24" VerticalAlignment="Top" Margin="0,1,0,0">
-                                                <TextBlock Text="1" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"
-                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <StackPanel Grid.Column="1">
-                                                <TextBlock Text="Activá el Modo Lite" FontSize="13" FontWeight="SemiBold"
-                                                           Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,2"/>
-                                                <TextBlock Text="Tocá ⚡ Modo Lite en la pantalla de Setup y tracking (esquina superior derecha)."
-                                                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                        </Grid>
-                                        <Grid Margin="0,0,0,10">
-                                            <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                            <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600" BorderThickness="1"
-                                                    CornerRadius="14" Width="24" Height="24" VerticalAlignment="Top" Margin="0,1,0,0">
-                                                <TextBlock Text="2" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"
-                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <StackPanel Grid.Column="1">
-                                                <TextBlock Text="Seleccioná qué trackear" FontSize="13" FontWeight="SemiBold"
-                                                           Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,2"/>
-                                                <TextBlock Text="Buscá apps o escribí URLs. Las seleccionadas aparecen como chips a la derecha."
-                                                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                        </Grid>
-                                        <Grid Margin="0,0,0,10">
-                                            <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                            <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600" BorderThickness="1"
-                                                    CornerRadius="14" Width="24" Height="24" VerticalAlignment="Top" Margin="0,1,0,0">
-                                                <TextBlock Text="3" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"
-                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <StackPanel Grid.Column="1">
-                                                <TextBlock Text="Iniciá y detené cuando termines" FontSize="13" FontWeight="SemiBold"
-                                                           Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,2"/>
-                                                <TextBlock Text="Al tocar Detener aparece el resumen inmediato con Focus y Unfocus de cada app."
-                                                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                        </Grid>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                            <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600" BorderThickness="1"
-                                                    CornerRadius="14" Width="24" Height="24" VerticalAlignment="Top" Margin="0,1,0,0">
-                                                <TextBlock Text="4" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"
-                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <StackPanel Grid.Column="1">
-                                                <TextBlock Text="Guardá o descartá" FontSize="13" FontWeight="SemiBold"
-                                                           Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,2"/>
-                                                <TextBlock FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap">
-                                                    <Run FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}">Guardar sesión</Run>
-                                                    <Run>→ queda en el historial.</Run>
-                                                    <Run FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}">Continuar sin guardar</Run>
-                                                    <Run>→ se descarta y volvés al modo Lite.</Run>
-                                                </TextBlock>
-                                            </StackPanel>
-                                        </Grid>
+                                        <TextBlock Text="→ Creá un proyecto y asignale apps" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,3"/>
+                                        <TextBlock Text="→ Iniciá sesiones desde el botón Comenzar" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,3"/>
+                                        <TextBlock Text="→ Mirá el progreso total en la vista del proyecto" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
                                     </StackPanel>
                                 </Border>
+                            </StackPanel>
+                        </Border>
 
-                                <!-- Key difference callout -->
-                                <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600"
-                                        BorderThickness="1" CornerRadius="8" Padding="14,12">
-                                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource AccentBrush}" LineHeight="19">
-                                        <Run FontWeight="Bold">¿Cuándo usarlo?</Run>
-                                        <Run>Usá el modo Lite cuando no necesitás guardar el historial ni asociar tiempo a un proyecto — solo querés saber cuánto tardaste en algo puntual.</Run>
+                        <!-- Dashboard -->
+                        <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,0,8,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                            BorderThickness="1" CornerRadius="8" Width="38" Height="38" Margin="0,0,12,0">
+                                        <TextBlock Text="&#xF246;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                   FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    </Border>
+                                    <TextBlock Text="Dashboard" FontSize="15" FontWeight="Bold"
+                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="19">
+                                    Analizá tus patrones de foco. Filtrá por Hoy, Semana, Mes o un rango personalizado. Las 3 apps más usadas aparecen destacadas, y el resto se lista ordenado por tiempo total.
+                                </TextBlock>
+                                <!-- Mini example -->
+                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,10,0,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="60"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="figma.exe" FontSize="11" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="2h 10m" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="—" FontSize="11" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Right"/>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Modo Lite -->
+                        <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="12" Padding="20" Margin="8,0,0,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600"
+                                            BorderThickness="1" CornerRadius="8" Width="38" Height="38" Margin="0,0,12,0">
+                                        <TextBlock Text="&#xE7E8;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                   FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="{StaticResource AccentBrush}"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border Background="{StaticResource AccentBgBrush}" BorderBrush="#4A6600" BorderThickness="1"
+                                                    CornerRadius="4" Padding="5,2" Margin="0,0,8,0">
+                                                <TextBlock Text="LITE" FontSize="8" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"/>
+                                            </Border>
+                                            <TextBlock Text="Modo Lite" FontSize="15" FontWeight="Bold"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="19">
+                                    Tracking rápido sin historial permanente. Ideal para reuniones, tareas puntuales o cuando solo querés saber cuánto tardás en algo. Al finalizar podés guardar o descartar la sesión.
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Sesiones -->
+                        <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,0,8,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                            BorderThickness="1" CornerRadius="8" Width="38" Height="38" Margin="0,0,12,0">
+                                        <TextBlock Text="&#xE823;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                   FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    </Border>
+                                    <TextBlock Text="Sesiones" FontSize="15" FontWeight="Bold"
+                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="19">
+                                    Cada vez que iniciás tracking se crea una sesión. Podés renombrarla, asignarla a un proyecto o ver el detalle completo de apps/URLs. Todo queda guardado localmente.
+                                </TextBlock>
+                                <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,10,0,0">
+                                    <TextBlock FontSize="11" Foreground="{StaticResource TextSecondaryBrush}">
+                                        <Run FontFamily="Consolas" Foreground="{StaticResource AccentBrush}">%APPDATA%\FocusTracker</Run>
+                                        <Run> — todo guardado en tu PC, sin internet.</Run>
                                     </TextBlock>
                                 </Border>
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </Border>
 
-                    <!-- Reset Data -->
-                    <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                            BorderThickness="1" CornerRadius="10" Padding="24,20" Margin="0,12,0,0">
-                        <StackPanel>
-                            <TextBlock Text="PELIGRO" FontSize="9" FontWeight="Bold" Foreground="{StaticResource DangerBrush}" Margin="0,0,0,14"/>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel>
-                                    <TextBlock Text="Borrar registros y reiniciar app" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                    <TextBlock Text="Esto eliminará permanentemente todos tus proyectos, sesiones, datos de tracking y reiniciará el tutorial. Esta acción no se puede deshacer."
-                                               FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,0" LineHeight="18"/>
+                        <!-- Tray -->
+                        <Border Background="{StaticResource BgCardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1" CornerRadius="12" Padding="20" Margin="8,0,0,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                            BorderThickness="1" CornerRadius="8" Width="38" Height="38" Margin="0,0,12,0">
+                                        <TextBlock Text="&#xE7EF;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                   FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    </Border>
+                                    <TextBlock Text="Bandeja del sistema" FontSize="15" FontWeight="Bold"
+                                               Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <Button Grid.Column="1" Content="Borrar registros" Style="{StaticResource DangerButton}" Click="BtnResetAllData_Click" Padding="16,10" VerticalAlignment="Center" Margin="20,0,0,0"/>
-                            </Grid>
-                        </StackPanel>
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="19">
+                                    Cerrás la ventana con la X y la app sigue midiendo en segundo plano. Aparece como ícono cerca del reloj — doble clic para volver a abrirla, clic derecho para opciones rápidas.
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                    </UniformGrid>
+
+                    <!-- ── SECCIÓN: Plugins ── -->
+                    <TextBlock Text="EXTENSIONES" FontSize="9" FontWeight="Bold"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,14"/>
+
+                    <Border BorderBrush="#2A4A6A" BorderThickness="1" CornerRadius="12" Padding="24,20" Margin="0,0,0,28">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#0D1A2E" Offset="0"/>
+                                <GradientStop Color="#0E0E12" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Border Background="#0D1A2E" BorderBrush="#2A4A6A"
+                                            BorderThickness="1" CornerRadius="8" Width="38" Height="38" Margin="0,0,14,0">
+                                        <TextBlock Text="&#xE756;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                   FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="#4DA6FF"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Plugins — más funcionalidades" FontSize="16" FontWeight="Bold"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="Extendé Focus Tracker con funciones que no son nativas"
+                                                   FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" LineHeight="20" Margin="0,0,0,14">
+                                    En la sección <Run FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}">Plugins</Run> encontrás funcionalidades adicionales que no vienen instaladas por defecto: temporizadores, integraciones, reportes avanzados, y más.
+                                    Solo tenés que descargar o comprar el plugin que querés y sumarlo a tu Focus Tracker en local — queda integrado directamente en la app.
+                                </TextBlock>
+                                <UniformGrid Columns="3">
+                                    <Border Background="#0D1A2E" BorderBrush="#1A3050" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,6,0">
+                                        <StackPanel>
+                                            <TextBlock Text="&#xE9D9;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="20" Foreground="#4DA6FF" Margin="0,0,0,6"/>
+                                            <TextBlock Text="Pomodoro" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,3"/>
+                                            <TextBlock Text="Ciclos de trabajo y descanso con temporizador en vivo" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="16"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Background="#0D1A2E" BorderBrush="#1A3050" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="6,0,6,0">
+                                        <StackPanel>
+                                            <TextBlock Text="&#xE9F5;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="20" Foreground="#4DA6FF" Margin="0,0,0,6"/>
+                                            <TextBlock Text="Reportes" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,3"/>
+                                            <TextBlock Text="Exportá tu actividad a PDF, CSV o Google Sheets" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="16"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Background="#0D1A2E" BorderBrush="#1A3050" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="6,0,0,0">
+                                        <StackPanel>
+                                            <TextBlock Text="&#xE8AB;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="20" Foreground="#4DA6FF" Margin="0,0,0,6"/>
+                                            <TextBlock Text="Integraciones" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,3"/>
+                                            <TextBlock Text="Conectá con Notion, Jira, Slack y otras herramientas" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="16"/>
+                                        </StackPanel>
+                                    </Border>
+                                </UniformGrid>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1" Text="&#xE756;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                       FontSize="48" Foreground="#0F1E30" VerticalAlignment="Center" Margin="24,0,0,0"/>
+                        </Grid>
                     </Border>
 
                 </StackPanel>
@@ -2098,6 +2394,80 @@
 
         </Grid>
 
+
+        <!-- ══ PLUGIN PAYMENT MODAL ══════════════════════════════════ -->
+        <Grid x:Name="ModalOverlay" Grid.ColumnSpan="2" Visibility="Collapsed"
+              Background="#CC000008" Panel.ZIndex="150"
+              MouseDown="ModalOverlay_MouseDown">
+            <Border x:Name="ModalCard"
+                    Background="{StaticResource BgCardBrush}"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="1" CornerRadius="14"
+                    MaxWidth="460" MaxHeight="600"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    MouseDown="ModalCard_MouseDown">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <!-- Modal header -->
+                    <Grid Margin="28,22,18,22">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtModalPluginName"
+                                       FontSize="17" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       TextWrapping="Wrap"/>
+                            <TextBlock x:Name="TxtModalPricingBadge"
+                                       FontSize="11" Margin="0,4,0,0"
+                                       Foreground="{StaticResource TextMutedBrush}"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Click="BtnModalClose_Click"
+                                Style="{StaticResource GhostButton}"
+                                Padding="8" VerticalAlignment="Top">
+                            <TextBlock Text="&#xE711;"
+                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                       FontSize="14"/>
+                        </Button>
+                    </Grid>
+                    <!-- Divider -->
+                    <Border Grid.Row="0" Height="1" Background="{StaticResource BorderBrush}"
+                            VerticalAlignment="Bottom"/>
+                    <!-- Modal body -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                  Margin="28,20,28,28">
+                        <StackPanel x:Name="ModalBodyPanel"/>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ══ TOAST NOTIFICATION ════════════════════════════════════ -->
+        <Border x:Name="ToastBorder" Grid.ColumnSpan="2" Visibility="Collapsed"
+                Panel.ZIndex="160"
+                HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                Margin="0,0,0,28" CornerRadius="10" Padding="16,11"
+                BorderThickness="1">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Background" Value="#1E1E24"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+                </Style>
+            </Border.Style>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="ToastIcon"
+                           FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                           FontSize="14" VerticalAlignment="Center" Margin="0,0,9,0"/>
+                <TextBlock x:Name="ToastText"
+                           FontSize="13" VerticalAlignment="Center"
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           MaxWidth="320" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
 
         <!-- ══ ONBOARDING OVERLAY ════════════════════════════════════ -->
         <!-- Sits on top of everything, col-span 2, fades out when done -->

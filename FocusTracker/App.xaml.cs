@@ -3,7 +3,11 @@ using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Forms;
+using System.Windows.Interop;
+using System.Windows.Threading;
 using FocusTracker.Data;
+using FocusTracker.Helpers;
+using FocusTracker.Plugins;
 using FocusTracker.Services;
 using FocusTracker.Settings;
 using Application = System.Windows.Application;
@@ -26,9 +30,16 @@ public partial class App : Application
 
         if (!createdNew)
         {
-            // Already running — focus existing window if possible
-            // (Note: in a real app we might use IPC to tell the other instance to show up)
-            System.Windows.MessageBox.Show("Focus Tracker ya está en ejecución.", "Focus Tracker", MessageBoxButton.OK, MessageBoxImage.Information);
+            // Already running — if we were launched with a focustracker:// URI,
+            // forward it to the running instance via named pipe; otherwise just
+            // bring the existing window to front.
+            var launchArgs = Environment.GetCommandLineArgs();
+            var installArgs = UriSchemeHandler.ParseInstallUri(launchArgs);
+            if (installArgs != null)
+                UriSchemeHandler.TrySendUri(installArgs.RawUri);
+            else
+                UriSchemeHandler.TrySendUri("focustracker://show");
+
             _mutex.Dispose();
             Shutdown();
             return;
@@ -52,11 +63,47 @@ public partial class App : Application
 
             Database = new DatabaseService(AppSettings.Instance.DataFolder);
             Tracker  = new TrackingService(Database);
+
+            // ── Plugin system ───────────────────────────────────────────
+            // Give the registry access to host services, then let the
+            // manager scan and load every enabled .focusplugin from disk.
+            PluginRegistry.Instance.SetHost(Database, Tracker);
+            PluginManager.Instance.LoadAll();
+
+            // ── URI scheme + IPC ────────────────────────────────────────
+            // Register focustracker:// in HKCU so the web store can open
+            // the app directly. Then start the named-pipe server so that
+            // subsequent launches (from URI clicks while app is running)
+            // can forward their install command here.
+            UriSchemeHandler.RegisterScheme();
+            UriSchemeHandler.StartPipeServer(async uriStr =>
+            {
+                if (uriStr == "focustracker://show")
+                {
+                    ShowMainWindow();
+                    return;
+                }
+                var install = UriSchemeHandler.ParseInstallUri([uriStr]);
+                if (install != null)
+                    await UriSchemeHandler.HandleInstallAsync(install);
+            });
+
             InitTrayIcon();
 
             var win = new Views.MainWindow();
             MainWindow = win;
             win.Show();
+
+            // ── Handle install URI passed on this launch ─────────────────
+            // Defer until after the window is fully rendered.
+            var startupInstall = UriSchemeHandler.ParseInstallUri(
+                Environment.GetCommandLineArgs());
+            if (startupInstall != null)
+            {
+                win.Dispatcher.BeginInvoke(
+                    async () => await UriSchemeHandler.HandleInstallAsync(startupInstall),
+                    DispatcherPriority.Loaded);
+            }
 
         }
         catch (Exception ex)
@@ -109,53 +156,80 @@ public partial class App : Application
             Visible = true
         };
 
-        var menu = new ContextMenuStrip();
-
-        var itemShow = new ToolStripMenuItem("Mostrar ventana");
-        itemShow.Font = new System.Drawing.Font(itemShow.Font, System.Drawing.FontStyle.Bold);
-        itemShow.Click += (_, _) => ShowMainWindow();
-
-        var itemStop = new ToolStripMenuItem("Detener tracking");
-        itemStop.Click += (_, _) =>
+        // We use our own custom WPF popup instead of the WinForms ContextMenuStrip.
+        // Left-click / double-click → restore the window.
+        // Right-click → open the custom popup with project shortcuts.
+        TrayIcon.MouseClick += (_, e) =>
         {
-            Tracker.StopTracking();
-            TrayIcon.Text = "Focus Tracker — inactivo";
+            if (e.Button == MouseButtons.Left)
+                ShowMainWindow();
+            else if (e.Button == MouseButtons.Right)
+                Current?.Dispatcher.BeginInvoke(ShowTrayPopup, DispatcherPriority.Normal);
         };
 
-        var itemExit = new ToolStripMenuItem("Salir de Focus Tracker");
-        itemExit.Click += (_, _) => RealExit();
-
-        menu.Items.Add(itemShow);
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(itemStop);
-        menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(itemExit);
-
-        TrayIcon.ContextMenuStrip = menu;
+        // Double-click always restores (fires after the first MouseClick)
         TrayIcon.DoubleClick += (_, _) => ShowMainWindow();
+    }
 
-        menu.Opening += (_, _) =>
-        {
-            itemStop.Enabled = Tracker.IsTracking;
-            itemStop.Text    = Tracker.IsTracking ? "Detener tracking" : "Tracking inactivo";
-            TrayIcon.Text    = Tracker.IsTracking
-                ? $"Focus Tracker — {Tracker.CurrentFocusedApp ?? "esperando…"}"
-                : "Focus Tracker — inactivo";
-        };
+    // ── Custom tray context popup ─────────────────────────────────────────
+    private static Views.TrayPopup? _trayPopup;
+
+    private static void ShowTrayPopup()
+    {
+        // Close any existing popup first
+        _trayPopup?.Close();
+
+        var projects = Database.GetAllProjects();
+        _trayPopup = new Views.TrayPopup(projects);
+
+        // Show offscreen first so UpdateLayout can measure actual size
+        _trayPopup.Left = -9999;
+        _trayPopup.Top  = -9999;
+        _trayPopup.Show();
+        _trayPopup.PositionNearCursor();
     }
 
     public static void ShowMainWindow()
     {
-        var win = Current.MainWindow;
+        // NotifyIcon events can fire on a WinForms / OS thread that is NOT the
+        // WPF dispatcher thread.  Any WPF call (Show, Activate, WindowState…)
+        // made from the wrong thread throws a cross-thread InvalidOperationException
+        // that is silently swallowed — resulting in nothing happening at all.
+        // BeginInvoke guarantees execution on the WPF UI thread.  We don't need
+        // Windows' brief "foreground rights" window here because we're calling
+        // Show() on a fully hidden window; the OS treats that as a fresh window
+        // creation and gives it focus automatically.
+        Current?.Dispatcher.BeginInvoke(DoShowMainWindow, DispatcherPriority.Normal);
+    }
+
+    private static void DoShowMainWindow()
+    {
+        var win = Current?.MainWindow;
         if (win == null) return;
-        win.Show();
-        win.WindowState = System.Windows.WindowState.Normal;
+
+        if (win.WindowState == WindowState.Minimized)
+            win.WindowState = WindowState.Normal;
+
+        if (!win.IsVisible)
+            win.Show();
+
+        // Win32 + WPF belt-and-suspenders to ensure the window comes to front
+        var hwnd = new WindowInteropHelper(win).Handle;
+        if (hwnd != IntPtr.Zero)
+        {
+            WinApi.ShowWindow(hwnd, WinApi.SW_RESTORE);
+            WinApi.SetForegroundWindow(hwnd);
+        }
+
         win.Activate();
+        win.Focus();
     }
 
     public static void RealExit()
     {
         Tracker?.StopTracking();
+        PluginRegistry.Instance.ShutdownAll(); // graceful plugin shutdown before DB closes
+        UriSchemeHandler.StopPipeServer();
         Tracker?.Dispose();
         Database?.Dispose();
         TrayIcon?.Dispose();
@@ -164,6 +238,8 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        PluginRegistry.Instance.ShutdownAll();
+        UriSchemeHandler.StopPipeServer();
         TrayIcon?.Dispose();
         Tracker?.Dispose();
         Database?.Dispose();

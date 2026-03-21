@@ -46,6 +46,18 @@ public static class WinApi
 
     public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
+    // ── Foreground window control ─────────────────────────────────────────
+    [DllImport("user32.dll")]
+    public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    /// <summary>nCmdShow values for ShowWindow.</summary>
+    public const int SW_RESTORE  = 9;
+    public const int SW_SHOW     = 5;
+    public const int SW_SHOWNA   = 8; // show without activating (useful as pre-step)
+
+    [DllImport("user32.dll")]
+    public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
     // DWM dark mode title bar (Windows 10 20H1+ / Windows 11)
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);

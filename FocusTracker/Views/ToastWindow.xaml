@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         WindowStyle="None" AllowsTransparency="True"
         Background="Transparent" ShowInTaskbar="False"
-        Width="320" SizeToContent="Height"
+        Width="340" SizeToContent="Height"
         Topmost="True" ResizeMode="NoResize">
     <Border x:Name="RootBorder"
             Background="#141418"
@@ -13,31 +13,65 @@
         <Border.Effect>
             <DropShadowEffect Color="#000000" BlurRadius="20" ShadowDepth="4" Opacity=".5"/>
         </Border.Effect>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Border x:Name="IconBorder"
-                    Width="32" Height="32" CornerRadius="8"
-                    Background="#1A2200" Margin="0,0,12,0"
-                    VerticalAlignment="Top">
-                <TextBlock x:Name="TxtIcon" Text="✓"
-                           FontSize="15" FontWeight="Bold"
-                           Foreground="#C8FF00"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"/>
-            </Border>
-            <StackPanel Grid.Column="1">
-                <TextBlock x:Name="TxtTitle"
-                           FontFamily="pack://application:,,,/Resources/Fonts/Fraunces-VariableFont.ttf#Fraunces"
-                           FontSize="14" FontWeight="Bold"
-                           Foreground="#EEEEF2"/>
-                <TextBlock x:Name="TxtMessage"
-                           FontFamily="pack://application:,,,/Resources/Fonts/DMSans-VariableFont.ttf#DM Sans"
-                           FontSize="12" Foreground="#7A7A92"
-                           Margin="0,4,0,0" TextWrapping="Wrap"/>
-            </StackPanel>
-        </Grid>
+
+        <StackPanel>
+            <!-- ── Header row: icon + title + close button ────────────── -->
+            <Grid Margin="0,0,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Icon -->
+                <Border x:Name="IconBorder"
+                        Width="32" Height="32" CornerRadius="8"
+                        Background="#1A2200" Margin="0,0,12,0"
+                        VerticalAlignment="Top">
+                    <TextBlock x:Name="TxtIcon" Text="✓"
+                               FontSize="15" FontWeight="Bold"
+                               Foreground="#C8FF00"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Border>
+
+                <!-- Title + Message -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Top">
+                    <TextBlock x:Name="TxtTitle"
+                               FontFamily="pack://application:,,,/Resources/Fonts/Fraunces-VariableFont.ttf#Fraunces"
+                               FontSize="14" FontWeight="Bold"
+                               Foreground="#EEEEF2" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="TxtMessage"
+                               FontFamily="pack://application:,,,/Resources/Fonts/DMSans-VariableFont.ttf#DM Sans"
+                               FontSize="12" Foreground="#7A7A92"
+                               Margin="0,4,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <!-- Close button (persistent only) -->
+                <Button x:Name="BtnClose"
+                        Grid.Column="2"
+                        Visibility="Collapsed"
+                        Click="BtnClose_Click"
+                        Width="24" Height="24"
+                        Margin="10,-2,0,0"
+                        VerticalAlignment="Top"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        ToolTip="Cerrar">
+                    <TextBlock Text="&#xE711;"
+                               FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                               FontSize="11" Foreground="#44444F"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Button>
+            </Grid>
+
+            <!-- ── Action buttons (persistent only) ───────────────────── -->
+            <StackPanel x:Name="ActionsPanel"
+                        Orientation="Horizontal"
+                        Margin="44,10,0,0"
+                        Visibility="Collapsed"/>
+        </StackPanel>
     </Border>
 </Window>

@@ -1,5 +1,5 @@
 ; ============================================================
-;  Focus Tracker — NSIS Installer Script v1.4
+;  Focus Tracker — NSIS Installer Script v1.5.1
 ;  Requiere: NSIS 3.x  https://nsis.sourceforge.io/
 ;  Compilar: makensis.exe FocusTracker.nsi
 ; ============================================================
@@ -8,7 +8,7 @@ Unicode True
 
 ;-- Metadata --------------------------------------------------
 !define APP_NAME        "Focus Tracker"
-!define APP_VERSION     "1.4"
+!define APP_VERSION     "1.5.1"
 !define APP_PUBLISHER   "Tenzinn"
 !define APP_URL         "https://santiagorada.com/focus-tracker"
 !define APP_EXE         "FocusTracker.exe"

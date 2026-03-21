@@ -1,0 +1,550 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>FocusTracker.PluginSDK</name>
+    </assembly>
+    <members>
+        <member name="T:FocusTracker.Plugins.IFocusPlugin">
+            <summary>
+            Contract every FocusTracker plugin must implement.
+            Discovered at host startup, initialised with an <see cref="T:FocusTracker.Plugins.IPluginContext"/>,
+            and shut down when the host exits.
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.IFocusPlugin.Id">
+            <summary>
+            Unique reverse-DNS identifier. Must not change across versions.
+            Example: "com.yourname.myplugin"
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.IFocusPlugin.Name">
+            <summary>Human-readable display name shown in the plugin store.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.IFocusPlugin.Version">
+            <summary>Semantic version string. Example: "1.0.0"</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.IFocusPlugin.Author">
+            <summary>Author or organisation name.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.IFocusPlugin.Description">
+            <summary>Short description (≤ 140 chars) of what the plugin does.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IFocusPlugin.GetUserHelp">
+             <summary>
+             Returns the user-facing help content for this plugin.
+            
+             ⚠️  This method is REQUIRED.  Any plugin class that does not implement it
+             will fail to compile with the error:
+               "does not implement interface member 'IFocusPlugin.GetUserHelp()'"
+            
+             The returned <see cref="T:FocusTracker.Plugins.PluginHelpContent"/> must not be null.
+             This method is called by the host at load time (before
+             <see cref="M:FocusTracker.Plugins.IFocusPlugin.Initialize(FocusTracker.Plugins.IPluginContext)"/> runs) so it must not depend on any
+             initialised state — keep it pure and stateless.
+            
+             The content is displayed in Plugin Manager → Mis plugins → Ayuda.
+             </summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IFocusPlugin.Initialize(FocusTracker.Plugins.IPluginContext)">
+            <summary>
+            Called once after the host finishes its startup sequence.
+            Subscribe to events, register settings, and store the context here.
+            </summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IFocusPlugin.Shutdown">
+            <summary>
+            Called when the host is about to exit.
+            Release resources, flush data, unsubscribe from events.
+            </summary>
+        </member>
+        <member name="T:FocusTracker.Plugins.IPluginContext">
+            <summary>
+            Sandboxed API surface provided to every plugin via
+            <see cref="M:FocusTracker.Plugins.IFocusPlugin.Initialize(FocusTracker.Plugins.IPluginContext)"/>.
+            All methods are thread-safe; event callbacks are delivered on the UI thread.
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.IPluginContext.IsTracking">
+            <summary>True while a tracking session is active.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.GetCurrentFocusedApp">
+            <summary>Display name of the app/URL currently in focus, or null.</summary>
+        </member>
+        <member name="E:FocusTracker.Plugins.IPluginContext.FocusChanged">
+            <summary>
+            Fires on the UI thread when the focused app changes.
+            (displayName, durationOnPrevious)
+            </summary>
+        </member>
+        <member name="E:FocusTracker.Plugins.IPluginContext.AlarmTriggered">
+            <summary>
+            Fires on the UI thread when a session or project alarm threshold is exceeded.
+            (title, message)
+            </summary>
+        </member>
+        <member name="E:FocusTracker.Plugins.IPluginContext.IdleDetected">
+            <summary>Fires on the UI thread when idle-detection stops tracking.</summary>
+        </member>
+        <member name="E:FocusTracker.Plugins.IPluginContext.TrackingStarted">
+            <summary>
+            Fires on the UI thread right after a tracking session starts.
+            The parameter is the project ID (or null for free/quick sessions).
+            </summary>
+        </member>
+        <member name="E:FocusTracker.Plugins.IPluginContext.TrackingStopped">
+            <summary>Fires on the UI thread right after a tracking session stops.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.GetAllSessions">
+            <summary>All sessions ordered by start time descending.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.GetSessionsInRange(System.DateTime,System.DateTime)">
+            <summary>Sessions whose start time falls within [from, to].</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.GetCurrentSession">
+            <summary>The currently active session, or null if not tracking.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.GetSessionDetail(System.Int32)">
+            <summary>Per-app usage summaries for a single session.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.GetUsageSummaries(System.DateTime,System.DateTime,System.Nullable{System.Int32})">
+            <summary>
+            Per-app summaries for the given range, optionally filtered to a project.
+            Ordered by total time descending.
+            </summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.GetTodaySummaries(System.Nullable{System.Int32})">
+            <summary>Today's summaries (midnight → now), optionally scoped to a project.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.GetTotalTrackedTime(System.DateTime,System.DateTime,System.Nullable{System.Int32})">
+            <summary>Total tracked time (focus + unfocus) across the given range.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.GetAllProjects">
+            <summary>All projects ordered alphabetically.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.GetProject(System.Int32)">
+            <summary>Project by ID, or null if not found.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.GetProjectSummaries(FocusTracker.Models.Project,System.DateTime,System.DateTime)">
+            <summary>
+            Project summaries split into explicitly tracked (main) and incidental (extras).
+            </summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.GetDataFolder">
+            <summary>Path to the folder where FocusTracker stores its database.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.GetNotificationSoundEnabled">
+            <summary>Whether the host has notification sounds enabled.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.GetIdleDetectionEnabled">
+            <summary>Whether idle-detection is enabled in host settings.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.CreateProject(System.String,System.String[],System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>Creates a project and returns its new ID.</summary>
+            <exception cref="T:System.ArgumentException">When name is empty.</exception>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.UpdateProject(System.Int32,System.String,System.String[],System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>Updates an existing project.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.DeleteProject(System.Int32)">
+            <summary>Deletes a project. Sessions are preserved but unlinked. Irreversible.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.RenameSession(System.Int32,System.String)">
+            <summary>Renames a session. Pass empty string to restore default label.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.AssignSessionToProject(System.Int32,System.Nullable{System.Int32})">
+            <summary>Links or unlinks a session from a project.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.DeleteSession(System.Int32)">
+            <summary>Permanently deletes a session and all its events. Irreversible.</summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.AddTrackedApp(System.String,System.String,System.Boolean)">
+            <summary>
+            Adds an app to the running session.
+            No-op if tracking is stopped.
+            </summary>
+            <param name="processName">Process name without .exe, lowercase (e.g. "slack").</param>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.AddTrackedUrl(System.String,System.String,System.Boolean)">
+            <summary>
+            Adds a URL host to the running session.
+            Sub-domains match automatically. No-op if tracking is stopped.
+            </summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.RegisterSetting(FocusTracker.Plugins.PluginSettingDescriptor)">
+            <summary>
+            Contributes a setting item to the host's Settings page under a named tab.
+            Call during <see cref="M:FocusTracker.Plugins.IFocusPlugin.Initialize(FocusTracker.Plugins.IPluginContext)"/>.
+            </summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.RefreshSettings(System.Action)">
+            <summary>
+            Clears all previously registered settings for this plugin, invokes
+            <paramref name="reRegisterCallback"/> (which should call <see cref="M:FocusTracker.Plugins.IPluginContext.RegisterSetting(FocusTracker.Plugins.PluginSettingDescriptor)"/>
+            for every desired setting), then tells the host to rebuild the settings UI.
+            Use this to update the settings panel dynamically without restarting the app —
+            for example, to show a new item after it is added, or to hide a conditional field.
+            </summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.NavigateToPluginSettings">
+            <summary>
+            Navigates the host application to the Settings page and activates the tab
+            that belongs to this plugin.
+            </summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.RegisterButton(FocusTracker.Plugins.PluginButtonContribution)">
+            <summary>
+            Contributes a button to a host screen.
+            Buttons appear in a dedicated plugin row below the screen's native controls.
+            Call during <see cref="M:FocusTracker.Plugins.IFocusPlugin.Initialize(FocusTracker.Plugins.IPluginContext)"/>.
+            </summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.RegisterHomeCard(FocusTracker.Plugins.PluginCardContribution)">
+            <summary>
+            Contributes a data card to the Home screen.
+            Cards appear below the built-in home content inside their own card UI.
+            When <see cref="P:FocusTracker.Plugins.PluginCardContribution.AutoRefreshSeconds"/> is greater than zero
+            the host will call <see cref="P:FocusTracker.Plugins.PluginCardContribution.GetRows"/> periodically.
+            Call during <see cref="M:FocusTracker.Plugins.IFocusPlugin.Initialize(FocusTracker.Plugins.IPluginContext)"/>.
+            </summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.ShowNotification(System.String,System.String,FocusTracker.Plugins.PluginToastKind)">
+            <summary>
+            Shows a temporary toast that auto-dismisses after a few seconds.
+            Plays the system sound if the user has notification sounds enabled.
+            </summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.ShowPersistentNotification(System.String,System.String,FocusTracker.Plugins.PluginToastKind,System.Collections.Generic.IReadOnlyList{FocusTracker.Plugins.PluginToastAction})">
+            <summary>
+            Shows a persistent toast that stays on screen until the user dismisses it.
+            Always shows a close (×) button. Optionally shows up to three action buttons.
+            Plays the system sound if the user has notification sounds enabled.
+            </summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.PlaySound(FocusTracker.Plugins.WindowsSystemSound)">
+            <summary>
+            Plays a Windows system sound — but ONLY if the user has notification
+            sounds enabled in the host's settings. Use this for event-driven audio.
+            </summary>
+        </member>
+        <member name="M:FocusTracker.Plugins.IPluginContext.ShowNotificationWithSound(System.String,System.String,FocusTracker.Plugins.PluginToastKind,FocusTracker.Plugins.WindowsSystemSound)">
+            <summary>
+            Shows a temporary toast AND plays a system sound unconditionally,
+            bypassing the host's notification-sound setting.
+            Use for alerts that must always produce audio feedback.
+            </summary>
+        </member>
+        <member name="T:FocusTracker.Plugins.PluginScreenTarget">
+            <summary>
+            The host screen where a plugin can contribute buttons or content cards.
+            </summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginScreenTarget.Home">
+            <summary>The main home / start page.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginScreenTarget.Dashboard">
+            <summary>The usage dashboard page.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginScreenTarget.Sessions">
+            <summary>The sessions list page.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginScreenTarget.Projects">
+            <summary>The projects page.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginScreenTarget.LiveTracking">
+            <summary>The live-tracking overlay shown while a session is active.</summary>
+        </member>
+        <member name="T:FocusTracker.Plugins.PluginButtonStyle">
+            <summary>
+            Visual style of a plugin-contributed button.
+            Each style maps 1-to-1 to an existing host button style.
+            </summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginButtonStyle.Primary">
+            <summary>Filled with the product accent colour (lime-green). Use for main CTAs.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginButtonStyle.Default">
+            <summary>Transparent background with grey border. General-purpose default.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginButtonStyle.Secondary">
+            <summary>Like Default but tinted with the unfocus orange. Use for secondary actions.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginButtonStyle.Tertiary">
+            <summary>Like Default but tinted with the link blue. Use for informational actions.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginButtonStyle.Danger">
+            <summary>Red-tinted border. Use for destructive / stop actions.</summary>
+        </member>
+        <member name="T:FocusTracker.Plugins.PluginButtonContribution">
+            <summary>
+            Describes a button that a plugin contributes to a host screen.
+            Create one per button and pass it to <see cref="M:FocusTracker.Plugins.IPluginContext.RegisterButton(FocusTracker.Plugins.PluginButtonContribution)"/>.
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginButtonContribution.Screen">
+            <summary>The screen where this button will appear. Required.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginButtonContribution.Label">
+            <summary>Button text. Required.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginButtonContribution.Icon">
+            <summary>
+            Optional Fluent Icons / Segoe MDL2 Assets unicode character (e.g. <c>"\uE768"</c>).
+            When set, the icon is displayed to the left of the label at the standard size.
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginButtonContribution.Style">
+            <summary>Visual style. Defaults to <see cref="F:FocusTracker.Plugins.PluginButtonStyle.Default"/>.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginButtonContribution.OnClicked">
+            <summary>Called on the UI thread when the button is clicked. Required.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginButtonContribution.GetIsVisible">
+            <summary>
+            Optional callback that the host calls periodically on the UI thread to
+            decide whether to show or hide this button.
+            Return <c>true</c> = visible, <c>false</c> = collapsed.
+            When <c>null</c> (default) the button is always visible.
+            </summary>
+        </member>
+        <member name="T:FocusTracker.Plugins.PluginCardRow">
+            <summary>
+            A single row inside a <see cref="T:FocusTracker.Plugins.PluginCardContribution"/>.
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginCardRow.Label">
+            <summary>Left-aligned label / key text. Required.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginCardRow.Value">
+            <summary>Optional right-aligned value text.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginCardRow.IsHeader">
+            <summary>
+            When <c>true</c>, this row is rendered as a section header
+            (bold, muted colour, no value column).
+            </summary>
+        </member>
+        <member name="T:FocusTracker.Plugins.PluginCardContribution">
+            <summary>
+            Describes a card that a plugin contributes to the Home screen.
+            Create one and pass it to <see cref="M:FocusTracker.Plugins.IPluginContext.RegisterHomeCard(FocusTracker.Plugins.PluginCardContribution)"/>.
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginCardContribution.Title">
+            <summary>Card title shown in the header. Required.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginCardContribution.Icon">
+            <summary>
+            Optional Fluent Icons / Segoe MDL2 Assets icon shown next to the title.
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginCardContribution.GetRows">
+            <summary>
+            Called on the UI thread to produce the card rows.
+            Return an empty list to render an empty-state message.
+            Required.
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginCardContribution.OnCardClicked">
+            <summary>
+            Optional callback invoked when the user clicks anywhere on the card.
+            When non-null the card renders with a hand cursor and a hover highlight.
+            Typical use: navigate to this plugin's settings tab via
+            <c>IPluginContext.NavigateToPluginSettings()</c>.
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginCardContribution.AutoRefreshSeconds">
+            <summary>
+            When greater than zero the host refreshes this card automatically every
+            <c>AutoRefreshSeconds</c> seconds. Set to <c>0</c> (default) for a
+            static card that only renders once.
+            </summary>
+        </member>
+        <member name="T:FocusTracker.Plugins.PluginToastKind">
+            <summary>
+            Visual kind of a notification toast (controls icon and accent colour).
+            </summary>
+        </member>
+        <member name="T:FocusTracker.Plugins.PluginToastAction">
+            <summary>
+            An action button inside a persistent notification toast.
+            Only supported for persistent toasts (ignored on temporary ones).
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginToastAction.Label">
+            <summary>Button label. Required.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginToastAction.OnClicked">
+            <summary>Called on the UI thread when the button is clicked. Required.</summary>
+        </member>
+        <member name="T:FocusTracker.Plugins.PluginHelpSection">
+            <summary>
+            A single section inside a plugin's user-help page.
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginHelpSection.Heading">
+            <summary>Section heading shown in bold. Required.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginHelpSection.Body">
+            <summary>Body text for this section. Supports plain text only. Required.</summary>
+        </member>
+        <member name="T:FocusTracker.Plugins.PluginHelpContent">
+             <summary>
+             The complete user-help content for a plugin.
+             Returned by <see cref="M:FocusTracker.Plugins.IFocusPlugin.GetUserHelp"/> and rendered by the host
+             in the Plugin Manager's "Ayuda" screen.
+            
+             Every plugin MUST return a non-null instance with a non-empty
+             <see cref="P:FocusTracker.Plugins.PluginHelpContent.Summary"/>. Plugins that do not implement
+             <see cref="M:FocusTracker.Plugins.IFocusPlugin.GetUserHelp"/> will not compile.
+             </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginHelpContent.Summary">
+            <summary>
+            One-paragraph overview of what the plugin does.
+            Shown at the top of the help screen before the sections. Required.
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginHelpContent.Sections">
+            <summary>
+            Ordered list of help sections. May be empty for simple plugins.
+            </summary>
+        </member>
+        <member name="T:FocusTracker.Plugins.WindowsSystemSound">
+            <summary>
+            Windows built-in system sounds available to plugins.
+            Maps to <see cref="!:System.Media.SystemSounds"/> members.
+            </summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.WindowsSystemSound.Asterisk">
+            <summary>The system "Asterisk" / information sound.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.WindowsSystemSound.Beep">
+            <summary>The system "Beep" / generic beep.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.WindowsSystemSound.Exclamation">
+            <summary>The system "Exclamation" / warning sound.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.WindowsSystemSound.Hand">
+            <summary>The system "Hand" / critical-stop sound.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.WindowsSystemSound.Question">
+            <summary>The system "Question" sound.</summary>
+        </member>
+        <member name="T:FocusTracker.Plugins.PluginSettingType">
+            <summary>Defines how the user interacts with a plugin-contributed setting item.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginSettingType.Toggle">
+            <summary>An on/off toggle switch.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginSettingType.TextInput">
+            <summary>A single-line text input field.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginSettingType.FilePicker">
+            <summary>A path display + "Browse…" button for picking a file.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginSettingType.FolderPicker">
+            <summary>A path display + "Browse…" button for picking a folder.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginSettingType.Button">
+            <summary>A labelled action button. Supports danger (red) style.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginSettingType.Select">
+            <summary>A dropdown selector with a fixed list of string options.</summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginSettingType.Label">
+            <summary>
+            A read-only section header / divider. Renders the Title in bold and the
+            Description as muted text below it, with no interactive control.
+            Use to visually group settings within a tab.
+            </summary>
+        </member>
+        <member name="F:FocusTracker.Plugins.PluginSettingType.AutoComplete">
+            <summary>
+            A text input with a live-filtered suggestion dropdown.
+            The host calls <see cref="P:FocusTracker.Plugins.PluginSettingDescriptor.AutoCompleteGetSuggestions"/>
+            on every keystroke and renders up to eight results below the field.
+            Committing a suggestion (click or Enter) calls
+            <see cref="P:FocusTracker.Plugins.PluginSettingDescriptor.OnAutoCompleteCommitted"/>.
+            Use <see cref="P:FocusTracker.Plugins.PluginSettingDescriptor.TextPlaceholder"/> for placeholder text and
+            <see cref="P:FocusTracker.Plugins.PluginSettingDescriptor.TextDefault"/> for the initial value.
+            </summary>
+        </member>
+        <member name="T:FocusTracker.Plugins.PluginSettingDescriptor">
+            <summary>
+            Describes a single setting item contributed by a plugin to the host's Settings page.
+            Create one per setting and pass it to <see cref="M:FocusTracker.Plugins.IPluginContext.RegisterSetting(FocusTracker.Plugins.PluginSettingDescriptor)"/>.
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginSettingDescriptor.TabName">
+            <summary>
+            Tab name in the Settings page. Created automatically if it does not exist.
+            Required.
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginSettingDescriptor.Title">
+            <summary>Bold heading shown above the control. Required.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginSettingDescriptor.Description">
+            <summary>Optional muted supporting text below the title.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginSettingDescriptor.Type">
+            <summary>Controls how the setting is rendered. Required.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginSettingDescriptor.FileFilter">
+            <summary>Win32 filter string, e.g. "JSON files|*.json|All files|*.*". FilePicker only.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginSettingDescriptor.ButtonIsDanger">
+            <summary>When true the button is styled red. Use for destructive actions.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginSettingDescriptor.ButtonIsSecondary">
+            <summary>When true the button is styled with the secondary (orange) accent colour. Use for primary call-to-action settings buttons.</summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginSettingDescriptor.AutoCompleteGetSuggestions">
+            <summary>
+            Called on every keystroke with the current query string.
+            Return up to eight suggestion display strings; return null or empty to suppress the popup.
+            Must be fast (≤ 10 ms) — it runs on the UI thread.
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Plugins.PluginSettingDescriptor.OnAutoCompleteCommitted">
+            <summary>
+            Called when the user confirms a value — either by clicking a suggestion from the
+            dropdown or by pressing Enter in the text field.
+            Receives the exact suggestion string that was selected (or the raw typed text).
+            </summary>
+        </member>
+        <member name="T:FocusTracker.Models.TrackingSession">
+            <summary>A recorded focus-tracking session.</summary>
+        </member>
+        <member name="P:FocusTracker.Models.TrackingSession.DisplayName">
+            <summary>Friendly label: uses <see cref="P:FocusTracker.Models.TrackingSession.Name"/> when set, otherwise "Session #Id".</summary>
+        </member>
+        <member name="T:FocusTracker.Models.Project">
+            <summary>A user-defined project grouping tracked apps and URLs.</summary>
+        </member>
+        <member name="P:FocusTracker.Models.Project.TrackedKeys">
+            <summary>Comma-separated process names or URL hosts tracked by this project.</summary>
+        </member>
+        <member name="P:FocusTracker.Models.Project.UsePomodoro">
+            <summary>When true, the Pomodoro plugin (if installed) auto-starts with sessions of this project.</summary>
+        </member>
+        <member name="T:FocusTracker.Models.TrackingItem">
+            <summary>Lightweight resolved item from a project's tracked-key string.</summary>
+        </member>
+        <member name="T:FocusTracker.Models.AppUsageSummary">
+            <summary>
+            Per-app aggregated usage summary for a given time range.
+            Focus time = actively in the foreground; unfocus time = open but not focused.
+            </summary>
+        </member>
+        <member name="P:FocusTracker.Models.AppUsageSummary.IsProjectExtra">
+            <summary>True when this entry came from a project session but is not in the project's tracked keys.</summary>
+        </member>
+        <member name="P:FocusTracker.Models.AppUsageSummary.FormattedTime">
+            <summary>Pre-formatted total time (e.g. "1h 5m 30s").</summary>
+        </member>
+        <member name="T:FocusTracker.Models.DateRangePreset">
+            <summary>Preset date ranges for use with <c>IPluginContext.GetUsageSummaries</c>.</summary>
+        </member>
+    </members>
+</doc>

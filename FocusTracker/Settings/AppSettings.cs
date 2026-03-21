@@ -13,9 +13,23 @@ public class AppSettings
     private static readonly string _settingsPath = Path.Combine(_defaultDir, "settings.json");
 
     // ── Properties ────────────────────────────────────────────────────────
-    public string DataFolder        { get; set; } = _defaultDir;
-    public bool   NotificationSound { get; set; } = true;
-    public bool   IdleDetection     { get; set; } = false;
+    public string DataFolder          { get; set; } = _defaultDir;
+    public bool   NotificationSound   { get; set; } = true;
+    public bool   IdleDetection       { get; set; } = false;
+    public int    IdleTimeoutSeconds  { get; set; } = 30;
+    public bool   StartWithWindows    { get; set; } = true;
+    public bool   MinimizeToTray      { get; set; } = true;
+
+    /// <summary>
+    /// When true, updates are downloaded and installed automatically without user confirmation.
+    /// </summary>
+    public bool   AutoUpdate          { get; set; } = false;
+
+    /// <summary>
+    /// Email last used successfully for a plugin license verification.
+    /// Pre-fills the verification field so the user doesn't retype it each time.
+    /// </summary>
+    public string LicenseEmail { get; set; } = "";
 
     // ── Singleton ─────────────────────────────────────────────────────────
     private static AppSettings? _instance;
